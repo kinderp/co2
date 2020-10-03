@@ -160,8 +160,39 @@ Dealing with requests for reading and writing is the main function of a driver, 
 * handle Plug 'n Play
 * log events
 
+## Device-Independent I/O software
 
+The basic function of the device-independent software is to perform the I/O functions that are common to all devices and to provide a uniform
+interface to the user-level software.
+Below the typical operations done in the device-independent software
 
+```
++--------------------------------------------+
+| Uniform interfacing for device driver      |
++ -------------------------------------------+
+| Buffering                                  |
++--------------------------------------------+
+| Error reporting                            |
++--------------------------------------------+
+| Allocating and releasing dedicated devices |
++--------------------------------------------+
+| Providing a device-independent block size  |
++--------------------------------------------+
+```
+
+### Uniform interfacing for Device Drivers
+
+A major issue in an operating system is how to make all I/O devices and drivers look more-or-less the same.
+If disks, printers, monitors, keyboards, etc., are all interfaced in different ways, every time a new peripheral
+device comes along the operating system must be modified for the new device.
+It's not acceptable a design in which each device driver has a different interface to the operating system. A good
+design is that one in which all drivers have the same interface towards the operating system.
+With a standard interface is is much easier to plug in a new driver, providing it conforms to the driver interface.
+It also means that driver writers know what is expected to of them (e.g. what funcitons they must provide and what
+kernel functions theu may call).
+
+Another IMPORTANT aspect of having a uniform interace is how I/O devices are named. **The device-independet software
+takes care of mapping symbolic device names onto the proper driver**. For example, in UNIX a device name, such as `/dev/hda0`
 
 
 
