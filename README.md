@@ -28,6 +28,10 @@ so let's dive into the `I/O subsystem`.
 
 # I/O subsystem
 
+## I/O Hardware
+
+### I/O devices
+
 I/O subsystem deals with two different types of devices:
 
 * **block devices**: stores information in fixed-size blocks (each one with its own address: **block addressable**). The essential property of block devices is that is possible to read or write each block independently of all the other ones. Disks are the most common block devices
@@ -38,4 +42,38 @@ Anyway the boundary between block and chars devices are not so well defined but 
 
 Filesystem, for example, deals only with **abstract block devices** and leave the device-dependent (talking with the **device controller**) part to "lower-level" software called **device driver**
 
-## 
+### Device controllers
+
+I/O units consist of a mechanical compoennt and an electronic component.
+The electronic component is called the **device controller** or **adapter**, in a PC it takes the form of a printed circuit card that can be inserted in an expansion slot.
+Ofc the mechanical component is the device itself.
+**The operating systems deals with the controller**, not the device.
+**Interface between the controller and the device is low-level** (serial bit of stream with preamble, tracks and checksum)
+With the controller, the operating system initializes the controller with some parameters and then lets the controller take care of actually driving the device.
+
+
+```
+________________________________________________
+_________Some_kind_of_BUS_______________________Towards Memory,CPU and other I/O devices
+           | |
+           | |
++------------------------+
+|                        |
+| Device controller      |  The  device  controller  transforms  the  serial  bits stream into a block
+| (electronic component) |  of bytes ( stored in some internal buffer ) and permorfs errors correction.
+|                        |  After checksum has been verified, the block of bytes can be to main memory.
++------------------------+
+           | |         
+           | | Low level interface, formatted (preamble + tracks) streams of bits
+           | |
++------------------------+
+|                        |
+| Physical Device        |
+| (mechanical component) |
+|                        |
++------------------------+
+```
+
+## I/O Software
+
+  
