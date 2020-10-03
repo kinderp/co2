@@ -144,6 +144,24 @@ system can call to get the driver to do work for it.
 +-----------------------------------------------+
 ```
 
+In general terms, the job of a device driver is to accept abstract I/O requests from the device-independent software above it and see
+to it that the request is really executed. Some tasks in this operation are:
+* check that input parametes are valid and return an error if not
+* translate abstract I/O request to the concrete forms (which operations send to device-controller and in what sequence)
+* Once determinated which commands to issue to the device controller, start all them writing into the controller's device registers
+
+After the commnd or commands have been issued one of the two situations will apply:
+* the device driver must wait until the controller does some work for it, so it blocks itself until the interrupt comes in to unblock it
+* the operations finish without delay, so the driver does not need to block
+After the operations have been completed it must check for errors and if all is right the driver may have data to pass to the device-independent
+software (e.g. a disk block just read)
+Dealing with requests for reading and writing is the main function of a driver, but there may be other ones:
+* the driver may need to initialize a device at system startup or the first time it is uded
+* handle Plug 'n Play
+* log events
+
+
+
 
 
 
