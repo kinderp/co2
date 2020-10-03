@@ -192,10 +192,46 @@ It also means that driver writers know what is expected to of them (e.g. what fu
 kernel functions theu may call).
 
 Another IMPORTANT aspect of having a uniform interace is how I/O devices are named. **The device-independet software
-takes care of mapping symbolic device names onto the proper driver**. For example, in UNIX a device name, such as `/dev/hda0`
+takes care of mapping symbolic device names onto the proper driver**. For example, in UNIX a device name, such as `/dev/hda0`,
+uniquely specifies the **i-node** for a **special file**, and this i-node contains:
+* the **major device number** which is uded to locate the appropriate driver
+* the **minor device number**, which is passed as a parameter to the driver in order to specify the unit to be read or written
+All devices have major and minor numbers, and all drivers are accessed by using the major device number to select the driver.
 
 
+## User-level I/O software
+
+Although most of the I/O software is within the operating system, a small portion of it consists of **libraries** linked together
+with user programs, and even whole programs running outside the kernel.
+System call, including the **I/O system calls**, are normally made by library procedures.
+When a C program contains the call: 
+
+```c
+count = write(fd, buffer, nbytes) // library procedure which will call corresponding system call
+```
+
+the library procedure `write` will be linked with the program and contained in the binary program present in memory at run time.
+The collection of all these library procedures (`write`, `read` etc.) is clearly part of the I/O system.
+
+Usually these procesures (`write`, `read`) do little more than put their parameters in the appropriate place for the system call, others
+like `printf`, `scanf` make some formatting work before calling a system call 
 
 
+Collection of all these procedures is the standard I/O library and all run as part of user programs.
 
-  
+Below a summary of the I/O layers
+
+```
++---------------------+
+|   User processes    | Make I/O call, format I/O
++---------------------+
+|  Device-independent | Naming, Protection, blocking, buffering, allocation
+|      software       |
++---------------------+
+|   Device drivers    | Set up device registers, check status
++---------------------+
+| Interrupt handlers  | Wake up driver when I/O completed
++---------------------+
+|      Hardware       | Perform I/O operation
++---------------------+
+```
