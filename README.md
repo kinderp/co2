@@ -76,4 +76,77 @@ _________Some_kind_of_BUS_______________________Towards Memory,CPU and other I/O
 
 ## I/O Software
 
+As already explained, the most important goal of I/O software is **device independence**. It means that should be possible to **write programs that can access any I/O devices without having to specify the device in advance**. For example, a program that reads a file as input should be able to read a file on an hard disk or and external ssd device **without having to modify the program for each different device**. **It is up to the operating system to take care of the problems caused by the fact that these devices are different and require different command sequences to read or write**.
+Other tasks are error handling, buffering or make operations that are actually interrupt-driven look blocking to the end user programs (e.g. synchronous/blocking vs asynchronous/interrupt-driven transfers) but we're not interested in all of these.
+
+I/O software is often organized in four layers:
+
+```
+
++-----------------------------------------------+
+|              User-level I/O software          | layer 4
++-----------------------------------------------+
+| Device independent operating systems software | layer 3
++-----------------------------------------------+
+|                  Device drivers               | layer 2
++-----------------------------------------------+
+|                Interrupt handlers             | layer 1
++-----------------------------------------------+
+|                   Hardware                    |
++-----------------------------------------------+
+
+```
+
+### Interrupt handlers
+
+I/O operations can take some time. Once a user-level I/O software (a process in memory) has requested an
+operation (read/write) it can just stands by that operation completes. It's the device driver (who really
+knows how to talk to the physical device) that blocks itself (and so implicitly user-level software) until 
+the I/O has completed. When I/O operation finally completes an hardware interrupts is raised by physical 
+device and it is cathed by the corresponding interrupt handler that will handle the interrupt and then will
+unblock the driver that started it. The effect of an interrupt wil lbe that a driver that was previously 
+blocked will be able to run again
+
+### Device drivers
+
+I/O devives are really different from each others in terms of registers for read/write commands or for status
+notification, the nature of commands vary radically from device to device as well.
+Thus each I/O device attached to a computer needs some device-specific code for controlling it. This code called
+the **device driver**, is generally written by the devices's manufacter. Operating systems needs this code in 
+order to provide I/O operations.
+Device drivers depending of the operating systems can be part of the kernel or it can be loaded as user-mode
+process.
+As mentioned before, operating systems usually classify driver as:
+
+* **block devices**
+* **character devices**
+
+Opeting systems usually define a **standard interface that all block driver must support** and a second **standard interface
+that all character driver must support**. These interfaces consist of a number of procedures that the rest of the operating
+system can call to get the driver to do work for it.
+
+```
++-----------------------------------------------+
+|              User-level I/O software          | layer 4
++-----------------------------------------------+
+| Device independent operating systems software | layer 3
+|                                               |
+|  +---------------------+--------------------+ |
+|  | interface all block | interface all char | |
+|  | driver must support | driver must support| |
+|  +------| |------------+------------| |-----+ |
++---------| |-------------------------| |-------+
+|                  Device drivers               | layer 2
++-----------------------------------------------+
+|                Interrupt handlers             | layer 1
++-----------------------------------------------+
+|                   Hardware                    |
++-----------------------------------------------+
+```
+
+
+
+
+
+
   
