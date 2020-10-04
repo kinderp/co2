@@ -222,18 +222,19 @@ Collection of all these procedures is the standard I/O library and all run as pa
 Below a summary of the I/O layers
 
 ```
-+---------------------+
-|   User processes    | Make I/O call, format I/O
-+---------------------+
-|  Device-independent | Naming, Protection, blocking, buffering, allocation
-|      software       |
-+---------------------+
-|   Device drivers    | Set up device registers, check status
-+---------------------+
-| Interrupt handlers  | Wake up driver when I/O completed
-+---------------------+
-|      Hardware       | Perform I/O operation
-+---------------------+
+    Abstract layers                                                        ALL Concrete Layers (not only I/O)
++---------------------+                                           +------+-----------------+-----+-----------------+
+|   User processes    | Make I/O call, format I/O                 | Init | User process #1 | ... | User Process #n |
++---------------------+                                           +------+--+--------+-----+-----+-------+---------+
+|  Device-independent | Naming, Protection, blocking,             | Process | File   |       ...         | Network |
+|      software       | buffering, allocation                     | manager | system |       ---         | manager |
++---------------------+                                           +---------+---+----+-----+-----+-----------------+
+|   Device drivers    | Set up device registers, check status     | Disk driver |TTY driver| ... | Ethernet driver |
++---------------------+                                           +--------+----+-------+--+-----+----+------------+
+| Interrupt handlers  | Wake up driver when I/O completed         | Kernel | Clock task | System task |     ...    |
++---------------------+                                           +--------+------------+-------------+------------+
+|      Hardware       | Perform I/O operation                     |                     HARDWARE                   |
++---------------------+                                           +------------------------------------------------+
 ```
 
 When a user program tries to read a block from a file, for example, the operating system is invoked (system call)
