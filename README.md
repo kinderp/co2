@@ -235,3 +235,11 @@ Below a summary of the I/O layers
 |      Hardware       | Perform I/O operation
 +---------------------+
 ```
+
+When a user program tries to read a block from a file, for example, the operating system is invoked (system call)
+to carry out the call. The device-independent software looks for it in the buffer cache. If the needed block is not
+there, it calls the device driver to issue the request to the hardware to go get it from disk. The process is then
+blocked unitl the disk operation has been completed.
+When the disk is finished, the hardware generates an interrupt. The interrupt handler is run to discover what has 
+happened, that is, which device wants attention right now. It then extracts the status from the device and wakes up
+the sleeping process (device-driver) to finish off the I/O request and let the user process continue.
