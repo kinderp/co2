@@ -387,12 +387,52 @@ write(1, "echo hello world\n", 17)      = 17
 +---------------------+
 ```
 
-It would be nice having the same simple and powerful way to manage resources in the cloud.
-`I/O subsystem` **provides a DEVICE INDEPENDENT interface** with simply one big idea, **treating all devices 
-in the system as files** (even if special:block/character) and **move down the interaction code with the device 
+## Everything is a file
+
+We conclude this high level `I/O` overview with this big UNIX rule: [Everything is a file](https://en.wikipedia.org/wiki/Everything_is_a_file)
+
+`I/O subsystem` **provides a DEVICE INDEPENDENT interface** with simply one BIG idea, **treating all devices 
+in the system as files** (even if special:block/character/pipe) and **move down the interaction code with the device 
 controller** to level 2 hiding its complexity and details to the user-space programmers.
 
+It would be nice having the same simple and powerful way to manage resources in the cloud.
+
+In order to achive the same power and simplicity in managing devices in a modern cloud infrastructure we should 
+before examine which kind of servives and common deplyment models we have to deal with there.
+Deployment models regards how infrastructure is architected, on top of these different types of infrastructures different services will be deployed. 
+
+We'll work on AWS
+ 
 # AWS
 
+## Region & Availability Zones
+
+**A region is a geographic location spread throughout the world** with the idea that a disaster or something in one area of the world will not affect a different area. 
+
+By having regions all around the world, there are also **some performance benefits in getting the data and services closer to your users**. 
+
+So what is the difference between a region and an availability zone? 
+
+**An availability zone is an isolated set of resources within a region**. 
+
+**Each region has at least two availability zones**. 
+
+The idea is that a fire or power outage in one availability zone should not affect another availability zone. 
+
+Each availability zone is also connected via a high-speed network connection. This allows you to architect and run as if you're in the same data center, but with the benefit that if something happens in one availability zone it usually does not affect all of the other availability zones in the region. 
+
+Not all regions have all AWS services available. As a new service is introduced, usually it starts in a few regions, then it will expand to all regions. 
+
+Be aware the price per hour differs slightly from one region to the other. Depending on the service, the cost difference can be significant, so you want to consider that as you're choosing which region to use to run your service.
+
+## Instance Deployment Models
+
+Let's go through some examples on best practices for instance deployment. 
+
+We'll start out with the **single instance model**. This is where within the AWS Cloud you have a single AWS region and a single availability zone in which you place a single instance. This is the most basic setup, and obviously has a **single point of failure**, however, this does have its uses for development or proof of concept, where you're trying to keep costs down and keep things simple to get started on a project. This is not a recommended architecture for a production scenario due to the single point of failure, however, the reality is many applications are a monolithic application that runs on a single server. Many times you can get better reliability out of a server on the cloud than a physical server in your data center. 
+
+The next step would be to deploy **multiple instances**. In this scenario, we have the AWS cloud and a single region still within the cloud, but instead of a single availability zone we have two. In those, you place one or more instances. For this example, let's just say **we put one instance in each availability zone** for a total of two instances. AWS provides **elastic load balancing** ( `ELB` ) options to direct traffic to your instances in each availability zone. With this setup, you are now redundant both in your instances and in your availability zones. AWS helps you out in that an elastic load balancer must have at least two instances in two different availability zones in order to send traffic to those instances. You can also perform live updates to your application by taking certain instances out of the load balancer, updating them, then introducing them back to live traffic. This is used for many production scenarios where **region failure is an acceptable risk**, meaning in your assessment the likelihood of a region failing is not great enough for you to take the next step and move to a more complex architecture. 
+
+If you do find that region failure is not an acceptable risk, then you would move to **multiple instances and multiple regions**. In this model, you would select two different AWS regions. Within each region you would still have at least two availability zones, and within each of those you would have at least one instance. Each region would have its own elastic load balancer, then **in order to wrap traffic between the regions, you would use Amazon Route 53**, which is their `DNS` service. This will allow you to set up various scenarios of two live regions, one warm standby region, or a backup region. Multi-region is the most complex architecture. It also has the highest cost. In this example, supposing we only needed the compute power of a single instance, this would cost four times as much as the single instance model and twice as much as the single region model. It does, however, give you the highest level of redundancy. Before going to a multiple region architecture, consider carefully all pieces of your system, including the instances, databases, S3 buckets, or other third-party services that your application depends on. You could have a multi-region architecture, yet still have a weak link that could take your system down.
 
 
