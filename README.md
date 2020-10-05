@@ -504,4 +504,28 @@ Multiple Instances & Multiple Regions MODEL:
 
 ```
 
+## VPC & Subnets
 
+Let's to discuss now the different AWS networking services, including **Virtual Private Cloud** (`VPC`); **Elastic Load Balancing**, `ELB`; `Route 53`; `API Gateway` etc. We'll discuss what the service does and when you might use the service. We'll also take a look at some example use cases so you can see how you might implement these services in your projects. 
+
+You can think of a **VPC** as a **logically isolated piece of the AWS cloud**. It's like your own private data center. The VPC is the foundation for all `EC2` instances, meaning if you're going to use an EC2 or a compute instance, all of the virtual machines offered by Amazon, you will be using a VPC. 
+
+This is where you can define **subnets**, **define IP address ranges** for your instances, as well as **configure access control** to and from your instances.
+
+**Let's take a look at the architecture of the VPCs** summaring some rules: 
+
+1. Within the AWS cloud we have regions. 
+
+2. VPCs belong to a region. 
+
+3. Your VPC will span all availability zones in that region, and you can have multiple VPCs within the same region. 
+
+4. Your VPC will contain one or more subnets. 
+
+5. A subnet is tied to a single availability zone. 
+
+5. your EC2 instances will be launched into a specific subnet. 
+
+When you create an AWS account, Amazon creates a default VPC for you in each region. This allows you to launch virtual machines for the EC2 service without really having to configure or think about anything. This can work really well for simple applications where you don't need to define multiple subnets or have control around the IP address ranges that are being used. Each region will have a default VPC with a subnet in each availability zone. This allows you to launch EC2 instances wherever you need them. As your application grows, you can modify the default VPC or you can create additional VPCs that are suited for your needs. 
+
+Behind the scenes is a massive network infrastructure. Within each availability zone and between availability zones in the same region is a private AWS network. This is highly over-provisioned, highly scalable, and very high throughput. Availability zones are connected and designed for extremely low latency, as if you were in the same data center. At the edge of the private network, AWS utilizes several different public internet providers to ensure high availability, high throughput, and low latency of all network traffic. Amazon also has their own global network backbone which provides region-to-region connection. This ensures privacy, speed, and reliability. When you launch EC2 instances into your network, the speed of those instances will vary by instance type.
