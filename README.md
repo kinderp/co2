@@ -386,3 +386,13 @@ write(1, "echo hello world\n", 17)      = 17
 | Physical device     |
 +---------------------+
 ```
+
+It would be nice having the same simple and powerful way to manage resources in the cloud.
+`I/O subsystem` **provides a DEVICE INDEPENDENT interface** with simply one big idea, **treating all devices 
+in the system as files** (even if special:block/character) and **move down the interaction code with the device 
+controller** to level 2 hiding its complexity and details to the user-space programmers.
+
+# AWS
+
+
+
