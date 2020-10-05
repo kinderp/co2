@@ -349,3 +349,40 @@ After that, the new disk is ready to be used. A developer can for example do som
 * `chmod u+x ./hello_world.sh`
 * `./hello_world.sh`
 
+If you wanna see the `OS I/O subsystem` at work you can do this:
+
+ ```
+m hello_world.sh; strace touch hello_world.sh 2>&1 |grep \
+> hello_world;strace 2>&1 echo echo hello world > hello_world.sh|grep hello
+
+execve("/usr/bin/touch", ["touch", "hello_world.sh"], 0x7ffe6c1f5408 /* 107 vars */) = 0
+openat(AT_FDCWD, "hello_world.sh", O_WRONLY|O_CREAT|O_NOCTTY|O_NONBLOCK, 0666) = 3
+execve("/usr/bin/echo", ["echo", "echo", "hello", "world"], 0x7fff9a73b068 /* 107 vars */) = 0
+write(1, "echo hello world\n", 17)      = 17
+```
+
+1. `touch` command is executed by `execve()` call
+2. `hello_world.sh` is opened (`openat()` is like `open()` we're not interested in little differences)
+3. `echo` command is executed by `execve()` call
+4. `echo hello world` is written by `write()` call
+
+```
++---------------------+                    - Layer 4 - User processes -
+|                     | Echo runs in user space and in order to write something in the new block device
+|                     | it uses aN  I/O  library function that will call the write() system call at the 
+|        echo         | below level (level3: Device independent software). write() would have been used
+|                     | even if hello world would have been written in a SSD disk thanks to the layer 3
+|                     | that provides a COMMON / UNIFORM DEVICE INDEPENDENT interface to the developers
++---------------------+-                   - Layer 3 - Device Independent Software -
+|                     | This level is responsible to translate abstract requests as write() in concrete     
+|        write()      | ones identifying the correct device driver to whom forward the incoming request
+|                     | Driver is selected using major and minor numbers defined when /dev/hdc file was
+|                     | created with mknod
++---------------------+
+|                     |
+|  IDE Disk(s) driver | 
+|                     |
++---------------------+
+| Physical device     |
++---------------------+
+```
