@@ -244,3 +244,108 @@ blocked unitl the disk operation has been completed.
 When the disk is finished, the hardware generates an interrupt. The interrupt handler is run to discover what has 
 happened, that is, which device wants attention right now. It then extracts the status from the device and wakes up
 the sleeping process (device-driver) to finish off the I/O request and let the user process continue.
+
+## At User (sys-admin) perspective
+
+Let's see how all this theory is translated pratically in sys-admin daily basis work.
+
+Suppose you are a sys-admin and your today task consists of preparing a new disk for a dev machine
+
+Note: we will see how to do that manually, block devices are created automatically by udev at run-time
+      and probably most of sys-admins do not use anymore cli tools (`fdisk`) for formatting HDs. But we
+      are interested in what happens under the hood and so will show manual process for that.
+      
+You will:
+
+1. create a new block device file (a UNIX special file) using `mknod` command for the new disk.
+           
+           
+            In order to use mknod you need to know the major and minor node numbers for the device to create. 
+            The  devices.txt  file  in the kernel source documentation is the canonical source of this infos.
+           
+            mknod <device-name> <device-type> <major-number> <minor-number>
+            
+            (*) device-name - full name of device (e.g. /dev/random etc.)
+            
+            (*) device-type - device files can represent 2 types of device , a 
+                              storage device (block) or a device use for other 
+                              purpose (character).
+                              Block devices are stuff like cd-roms, hard drives
+                              etc . Character devices are things like /dev/zero 
+                              /dev/null, or any other device not used to  store 
+                              info. As you probably have guessed, for mknod "b" 
+                              means block, and "c" means character
+           
+            (*) major-number - a number referring to what type the device is in
+            (*) minor-number - the number of the device within the group
+           
+            We suppose it's a good old IDE drive (/dev/hdX)
+           
+            /dev/hda is the master IDE drive on the primary IDE controller. 
+            /dev/hdb is the slave drive on the primary controller. 
+            /dev/hdc and /dev/hdd are the master and slave devices on the 
+            secondary controller respectively. 
+           
+            Each disk is divided into partitions. 
+           
+            Partitions 1-4 are primary partitions and partitions 5 and above are 
+            logical partitions inside extended partitions. 
+            Therefore the device file which references each partition is made up
+            of several parts. 
+            For example /dev/hdc9 references partition 9 (a logical partition in-
+            side an extended partition type) on the master IDE drive on the 2-th 
+            IDE controller. 
+           
+            The major and minor node numbers are somewhat complex. 
+            For 1st IDE controller all partitions are block devices  on major 3 
+            Master drive hda is at minor 0 and slave drive hdb is at  minor  64 
+            For each partition inside the drive add the partition number to the
+            minor node number for the drive. 
+            For example /dev/hdb5 is major 3, minor 69 (64 + 5 = 69). 
+            Drives on the secondary interface are handled the same way, but with
+            major node 22.
+           
+           
+   Suppose our new IDE disk is attached on the 2nd IDE controller as master drive.
+   Our mknod command will be somethink like this:
+   
+   `mknod /dev/hdc 22 0`
+   
+   A new device file `hdc` will appear in `/dev`
+   
+2. create a new primary partition in that device using `fdisk`
+
+
+           # fdisk  /dev/hdc
+
+           The number of cylinders for this disk is set to 9729.
+           There is nothing wrong with that, but this is larger than 1024,
+           and could in certain setups cause problems with:
+           1) software that runs at boot time (e.g., old versions of LILO)
+           2) booting and partitioning software from other OSs
+              (e.g., DOS FDISK, OS/2 FDISK)
+
+           Command (m for help): n
+           First cylinder (2662-5283, default 2662):
+           Using default value 2662
+           Last cylinder, +cylinders or +size{K,M,G} (2662-3264, default 3264):
+           Using default value 3264
+           
+           .... Other stuff below, like:
+           .... choose partition type
+           .... save and exit
+           
+
+   at the end a new device file `hdc1` for the new partition will appear in `dev`
+   
+3. Format the new partition `mkfs.ext4 /dev/hdc1`
+4. Mount the new partition in a mount point of your choice (e.g. /mnt/code) : `mount /dev/hdc1 /mnt/code`
+
+After that, the new disk is ready to be used. A developer can for example do something like this:
+
+* `cd /mnt/code`
+* `touch hello_world.sh`
+* `echo "echo hello world" > hello_world.sh`
+* `chmod u+x ./hello_world.sh`
+* `./hello_world.sh`
+
