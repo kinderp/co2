@@ -431,8 +431,68 @@ Let's go through some examples on best practices for instance deployment.
 
 We'll start out with the **single instance model**. This is where within the AWS Cloud you have a single AWS region and a single availability zone in which you place a single instance. This is the most basic setup, and obviously has a **single point of failure**, however, this does have its uses for development or proof of concept, where you're trying to keep costs down and keep things simple to get started on a project. This is not a recommended architecture for a production scenario due to the single point of failure, however, the reality is many applications are a monolithic application that runs on a single server. Many times you can get better reliability out of a server on the cloud than a physical server in your data center. 
 
+```
+(R) some kinf of resource (e.g. EC2 instance)
+        
++-------------------+
+| AWS Cloud         |
+| +--------------+  |
+| | AWS Region   |  |
+| | +---------+  |  |
+| | | AZ      |  |  |
+| | | +-----+ |  |  |
+| | | | (R) | |  |  |
+| | | +-----+ |  |  |
+| | +---------+  |  |
+| +--------------+  |
++-------------------+
+```
+
 The next step would be to deploy **multiple instances**. In this scenario, we have the AWS cloud and a single region still within the cloud, but instead of a single availability zone we have two. In those, you place one or more instances. For this example, let's just say **we put one instance in each availability zone** for a total of two instances. AWS provides **elastic load balancing** ( `ELB` ) options to direct traffic to your instances in each availability zone. With this setup, you are now redundant both in your instances and in your availability zones. AWS helps you out in that an elastic load balancer must have at least two instances in two different availability zones in order to send traffic to those instances. You can also perform live updates to your application by taking certain instances out of the load balancer, updating them, then introducing them back to live traffic. This is used for many production scenarios where **region failure is an acceptable risk**, meaning in your assessment the likelihood of a region failing is not great enough for you to take the next step and move to a more complex architecture. 
 
+```
++-------------------------------+
+| AWS Cloud                     |
+| +--------------------------+  |
+| | AWS Region               |  |
+| |                          |  |
+| |      +----(ELB)----+     |  |
+| |     \|/           \|/    |  |
+| | +---------+  +---------+ |  |
+| | | AZ #1   |  | AZ #2   | |  |
+| | | +-----+ |  | +-----+ | |  |
+| | | | (R) | |  | | (R) | | |  |
+| | | +-----+ |  | +-----+ | |  |
+| | +---------+  +---------+ |  |
+| +--------------------------+  |
++-------------------------------+
+```
+
+
+
 If you do find that region failure is not an acceptable risk, then you would move to **multiple instances and multiple regions**. In this model, you would select two different AWS regions. Within each region you would still have at least two availability zones, and within each of those you would have at least one instance. Each region would have its own elastic load balancer, then **in order to wrap traffic between the regions, you would use Amazon Route 53**, which is their `DNS` service. This will allow you to set up various scenarios of two live regions, one warm standby region, or a backup region. Multi-region is the most complex architecture. It also has the highest cost. In this example, supposing we only needed the compute power of a single instance, this would cost four times as much as the single instance model and twice as much as the single region model. It does, however, give you the highest level of redundancy. Before going to a multiple region architecture, consider carefully all pieces of your system, including the instances, databases, S3 buckets, or other third-party services that your application depends on. You could have a multi-region architecture, yet still have a weak link that could take your system down.
+
+```
++--------------------------------------------------------------------------+
+| AWS Cloud                                                                |
+|                                                                          |
+|            +--------------------(R53)------------------+                 |
+|            |                                           |                 |
+|           \|/                                         \|/                |
+| +--------------------------+              +--------------------------+   |
+| | AWS Region               |              | AWS Region               |   |
+| |                          |              |                          |   |
+| |      +----(ELB)----+     |              |      +----(ELB)----+     |   |
+| |     \|/           \|/    |              |     \|/           \|/    |   |
+| | +---------+  +---------+ |              | +---------+  +---------+ |   |
+| | | AZ #1   |  | AZ #2   | |              | | AZ #1   |  | AZ #2   | |   |
+| | | +-----+ |  | +-----+ | |              | | +-----+ |  | +-----+ | |   |
+| | | | (R) | |  | | (R) | | |              | | | (R) | |  | | (R) | | |   |
+| | | +-----+ |  | +-----+ | |              | | +-----+ |  | +-----+ | |   |
+| | +---------+  +---------+ |              | +---------+  +---------+ |   |
+| +--------------------------+              | +------------------------+   |
++--------------------------------------------------------------------------+
+
+```
 
 
