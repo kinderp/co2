@@ -526,6 +526,48 @@ This is where you can define **subnets**, **define IP address ranges** for your 
 
 5. your EC2 instances will be launched into a specific subnet. 
 
+
+```
+
++-------------------------------------------------------------------------------------------------------------+
+| AWS Cloud                                                                                                   |
+|                                                                                                             |
+| +--------------------------------------------------------------------------------------------------------+  |
+| | AWS Region                                                                                             |  |
+| |                                                                                                        |  |
+| |                   +-------------------------------------+  +-------------------------------------+     |  |
+| |                   | VPC #1                              |  |  VPC #2                             |     |  |
+| |   +-------------------------------------------------------------------------------------------------+  |  |
+| |   | AZ #1         |                                     |  |                                     |  |  |  |
+| |   |               |  +-------------+    +-------------+ |  |  +-------------+    +-------------+ |  |  |  |
+| |   |               |  | Subnet #1   |    | Subnet #2   | |  |  | Subnet #1   |    | Subnet #2   | |  |  |  |
+| |   |               |  |             |    |             | |  |  |             |    |             | |  |  |  |
+| |   |               |  |  (R)   (R)  |    | (R)    (R)  | |  |  |  (R)  (R)   |    |  (R)  (R)   | |  |  |  |
+| |   |               |  |             |    |             | |  |  |             |    |             | |  |  |  |
+| |   |               |  +-------------+    +-------------+ |  |  +-------------+    +-------------+ |  |  |  |
+| |   |               |                                     |  |                                     |  |  |  |
+| |   +-------------------------------------------------------------------------------------------------+  |  |
+| |                   |                                     |  |                                     |     |  |
+| |                   |                                     |  |                                     |     |  |
+| |   +-------------------------------------------------------------------------------------------------+  |  |
+| |   | AZ #2         |                                     |  |                                     |  |  |  |
+| |   |               |  +-------------+    +-------------+ |  |  +-------------+    +-------------+ |  |  |  |
+| |   |               |  | Subnet #1   |    | Subnet #2   | |  |  | Subnet #1   |    | Subnet #2   | |  |  |  |
+| |   |               |  |             |    |             | |  |  |             |    |             | |  |  |  |
+| |   |               |  |  (R)   (R)  |    | (R)    (R)  | |  |  |  (R)  (R)   |    |  (R)  (R)   | |  |  |  |
+| |   |               |  |             |    |             | |  |  |             |    |             | |  |  |  |
+| |   |               |  +-------------+    +-------------+ |  |  +-------------+    +-------------+ |  |  |  |
+| |   |               |                                     |  |                                     |  |  |  |
+| |   +-------------------------------------------------------------------------------------------------+  |  |
+| |                   |                                     |  |                                     |     |  |
+| |                   |                                     |  |                                     |     |  |
+| |                   +-------------------------------------+  +-------------------------------------+     |  |
+| |                                                                                                        |  |
+| +--------------------------------------------------------------------------------------------------------+  |
+|                                                                                                             |
++-------------------------------------------------------------------------------------------------------------+
+
+```
 When you create an AWS account, Amazon creates a default VPC for you in each region. This allows you to launch virtual machines for the EC2 service without really having to configure or think about anything. This can work really well for simple applications where you don't need to define multiple subnets or have control around the IP address ranges that are being used. Each region will have a default VPC with a subnet in each availability zone. This allows you to launch EC2 instances wherever you need them. As your application grows, you can modify the default VPC or you can create additional VPCs that are suited for your needs. 
 
 Behind the scenes is a massive network infrastructure. Within each availability zone and between availability zones in the same region is a private AWS network. This is highly over-provisioned, highly scalable, and very high throughput. Availability zones are connected and designed for extremely low latency, as if you were in the same data center. At the edge of the private network, AWS utilizes several different public internet providers to ensure high availability, high throughput, and low latency of all network traffic. Amazon also has their own global network backbone which provides region-to-region connection. This ensures privacy, speed, and reliability. When you launch EC2 instances into your network, the speed of those instances will vary by instance type.
