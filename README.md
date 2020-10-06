@@ -435,13 +435,13 @@ We'll start out with the **single instance model**. This is where within the AWS
 
 Single Instance MODEL:
 
-(R) some kinf of resource (e.g. EC2 instance)
-        
-+-------------------+
-| AWS Cloud         |
-| +--------------+  |
-| | AWS Region   |  |
-| | +---------+  |  |
+                                 (R) some kinf of resource/service
+                                     - EC2 instance
++-------------------+                - DynamoDB
+| AWS Cloud         |                - RDS
+| +--------------+  |                - ELB
+| | AWS Region   |  |                - S3 bucket
+| | +---------+  |  |                 
 | | | AZ      |  |  |
 | | | +-----+ |  |  |
 | | | | (R) | |  |  |
@@ -571,3 +571,29 @@ This is where you can define **subnets**, **define IP address ranges** for your 
 When you create an AWS account, Amazon creates a default VPC for you in each region. This allows you to launch virtual machines for the EC2 service without really having to configure or think about anything. This can work really well for simple applications where you don't need to define multiple subnets or have control around the IP address ranges that are being used. Each region will have a default VPC with a subnet in each availability zone. This allows you to launch EC2 instances wherever you need them. As your application grows, you can modify the default VPC or you can create additional VPCs that are suited for your needs. 
 
 Behind the scenes is a massive network infrastructure. Within each availability zone and between availability zones in the same region is a private AWS network. This is highly over-provisioned, highly scalable, and very high throughput. Availability zones are connected and designed for extremely low latency, as if you were in the same data center. At the edge of the private network, AWS utilizes several different public internet providers to ensure high availability, high throughput, and low latency of all network traffic. Amazon also has their own global network backbone which provides region-to-region connection. This ensures privacy, speed, and reliability. When you launch EC2 instances into your network, the speed of those instances will vary by instance type.
+
+## Deployment tree
+
+A deployment model cam be though as a tree like in the below figure:
+
+```
+                                                       (app)
+                                                         |
+                                                         |
+                           +-----------------------------+------------------------------+
+                           |                                                            |
+                           |                                                            |
+                         (vpc1)                                                       (vpc2)
+                           |                                                            |
+                           |                                                            |
+                  +--------+---------+                                         +--------+---------+           
+                  |                  |                                         |                  |
+                  |                  |                                         |                  |
+                (sub1)             (sub2)                                    (sub1)             (sub2)
+                  |                  |                                         |                  |
+                  |                  |                                         |                  |
+          +---+---+---+---+      +---+---+                             +---+---+---+---+      +---+---+
+          |   |   |   |   |      |   |   |                             |   |   |   |   |      |   |   |
+         (R) (R) (R) (R) (R)    (R) (R) (R)                           (R) (R) (R) (R)  R)    (R) (R)  R)
+```
+
