@@ -574,7 +574,7 @@ Behind the scenes is a massive network infrastructure. Within each availability 
 
 ## Deployment tree
 
-A deployment model cam be though as a tree like in the below figure:
+A deployment model cam be thought as a tree like in the below figure:
 
 ```
                                             (app)
@@ -594,6 +594,16 @@ A deployment model cam be though as a tree like in the below figure:
        |                  |                                         |                  |
 +---+---+---+---+      +---+---+                             +---+---+---+---+      +---+---+
 |   |   |   |   |      |   |   |                             |   |   |   |   |      |   |   |
-(R) (R) (R) (R) (R)    (R) (R) (R)                           (R) (R) (R) (R)  R)    (R) (R)  R)
+R1 R2  R3   R4  R6     R7  R8  R9                           (R) (R) (R) (R)  R)    (R) (R)  R)
+```
+
+it's a n-ary tree and seems a kind of filesystem structure.
+
+A procedure (recursive?!) can perform a kind of tree traversal:
+`R1->R2->R3->R4->R5->sub1->R7->R8->R9->sub2->vpc1->`
+
+to retrieve informations about deployment model (vpcs, subs, services) and create some data structures in memory to store these infos.
+Could be possible for a developer create/modify this tree via some cli commands. Once finished another command should be responsible
+to compile/translate data structures in CDK code ready to be deployed on AWS.
 ```
 
