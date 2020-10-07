@@ -597,7 +597,9 @@ A deployment model cam be thought as a tree like in the below figure:
 R1 R2  R3   R4  R5     R6  R7  R8                           (R) (R) (R) (R)  R)    (R) (R)  R)
 ```
 
-it's a n-ary tree and seems a kind of filesystem structure.
+Itt's a n-ary tree and seems a kind of filesystem structure.
+It doesn't matter meaning of all the nodes for the moment, main concept here is that we wanna model our deployment(s) with
+a tree data structure.
 
 A procedure (recursive?!) can perform a kind of tree traversal:
 `R1->R2->R3->R4->R5->sub1->R6->R7->R8->sub2->vpc1->`
@@ -608,24 +610,47 @@ to compile/translate data structures in CDK code ready to be deployed on AWS.
 
 ## Building a Deployment tree 
 
-* `co2 mknod n 0 64 /dev/vpca` create a device file for vpc1
+Let's take a pratical example of one application with:
 
-* `co2 fnets /dev/vpca` partitin vpc1 in subnets. Two new device files at the end: `/dev/vpca1`, `/dev/vpca2`
+* 1 `vpc` (10.0.0.0/16) in a region of your choice
+* 2 `subnets` (ofc in 2 different AZ(s) of the chosen region)
+* 1 `elb` to route traffic to replicated resources in the subnets
+* 1 `asg` to group resources as target for `elb`
+* 1 `s3` bucket for html tempaltes
+* 1 `dynamoDB` to store data
+* 1 `RDS` to store relational data
 
-* `co2 mount /dev/vpc1 /home/antonio/projects/hello_world/.co2`
+
+If you are not familiar with ELB and AGS, below a brief summary.
+
+An **Auto Scaling group** uses a launch configuration which has an image in it and scaling rules to expand or shrink a pool of instances automatically. As long as you set your thresholds correctly, you can let the Auto Scaling group worry about creating and managing the instances of your application. With an Auto Scaling group adding or removing instances, there's one last piece of the puzzle to complete application scaling. **How do you tell your users where to find your application instances? If the IPs keep changing, there's no way to create accurate DNS entries**. This is where a **load balancer** comes into the picture. A load balancer is essentially a router instance that provides a stable endpoint to reliably send your users and set DNS entries to. The load balancer will keep track of which IPs are available and send users to them efficiently. The load balancer connects to an Auto Scaling group so they both work together to efficiently create groups of instances and route users to them.
+
+* `co2 mknod vpc 0 2 /dev/vpca` create a device file (`/dev/vpca`) for our single vpc
+
+           0 and 2 in mknod are major and minor numbers and are used by the device driver.
+           
+           major could be used to define ip4 vs ipv6 and minor to select vpc CIDR block
+           
+           major = 0 ipv4         major = 1 ipv6
+           
+           minor = 0 10.0.0.0/28  minor = 1 10.0.0.0/24 minor = 2 10.0.0.0/16 ...
+           
+           vpc device driver will handle all the complexity of the vpc detaisl and crate a vpc for you
+           
+
+* `co2 fnod /dev/vpca` partition `/dev/vpca` in subnets. Two new device files at the end: `/dev/vpcaSub1`, `/dev/vpcaSub2`
+
+           fnod should permit to define subnet masks for each subnets and choose different AZ(s) for
+           the different subnets for autoscaling or simply define a name for those
+
+* `co2 mount /dev/vpca /home/antonio/projects/hello_world/.co2`
+
+           .co2/
+           └── vpca
+               ├── vpcaSub1
+               └── vpcaSub2
+               
+
 
            
-          .co2
-           ├── vpc1
-           │   └── sub1
-           │       ├── R1
-           │       ├── R2
-           │       ├── R3
-           │       ├── R4
-           │       └── R5
-           └── vpc2
-               └── sub2
-                   ├── R6
-                   ├── R7
-                   └── R8
            
