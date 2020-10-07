@@ -625,6 +625,9 @@ If you are not familiar with ELB and AGS, below a brief summary.
 
 An **Auto Scaling group** uses a launch configuration which has an image in it and scaling rules to expand or shrink a pool of instances automatically. As long as you set your thresholds correctly, you can let the Auto Scaling group worry about creating and managing the instances of your application. With an Auto Scaling group adding or removing instances, there's one last piece of the puzzle to complete application scaling. **How do you tell your users where to find your application instances? If the IPs keep changing, there's no way to create accurate DNS entries**. This is where a **load balancer** comes into the picture. A load balancer is essentially a router instance that provides a stable endpoint to reliably send your users and set DNS entries to. The load balancer will keep track of which IPs are available and send users to them efficiently. The load balancer connects to an Auto Scaling group so they both work together to efficiently create groups of instances and route users to them.
 
+We will show a manual proces (as we did for real `I/O subsystem` before) but that's only to know what happens under the hood.
+A developer should interact with an higher level, that's much more for sys-admin or devops guys
+
 * `co2 mknod vpc 0 2 /dev/vpca` create a device file (`/dev/vpca`) for our single vpc
 
            0 and 2 in mknod are major and minor numbers and are used by the device driver.
@@ -651,6 +654,36 @@ An **Auto Scaling group** uses a launch configuration which has an image in it a
                └── vpcaSub2
                
 
+* `co2 mknod elb 0 40 /dev/elb0` create a device file (`/dev/elb0`) 
 
+           0 and 40 in mknod are major and minor numbers and are used by the device driver
            
+           major could be used to select the type:
+           major = 0 Application Load Balancer
+           major = 1 Network     Load Balancer
+           major = 2 Classic     Load Balancer
            
+           minor for specif settings of the different types
+
+           for example 40 could group settings like:
+           Schema     : Internet facing
+           IP Add Type: ipv4
+           Listerer   : port 80
+           
+           Note: We don't define neither a SecurtyGroup nor a TargetGroup. They must be retrieved either from
+                 device dirver settings or from the structure of our deployment tree.
+                 SecurityGroup (it's just like a set of firewall rules to apply) can be added automatically by
+                 the elb device driver from the minor number (Listener field)
+                 TargetGroupt can be created later once a EC2 AMI instance has been added as leaf nod of the 
+                 deployment tree.
+                 
+                 elb gets some input (requests on some ports that will be filtered by a SecurityGroup) and ofc
+                 return some output (same requests but routed to all the elements of a TargetGroup) so it can 
+                 be seen as a process and as any process in a system it has a STDIN (file descriptor = 1) and a
+                 STDOUT (file descriptor = 2) attached to it.
+                 
+                 INPUT is its default SecurityGroup, OUTPUT is its default TargetGroup generated automatically 
+                 when the deplyment tree will be traversed to create deployment code (building phase?!?)
+                 
+                 But as in I/O subsystem you can attach oters INPUT/OUTPUT file descriptors to a process
+                 exec 3 > a_new_file (it will create a new OUTPUT file descriptor 3 ... 0,1,2 are already taken)
