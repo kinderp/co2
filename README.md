@@ -674,16 +674,40 @@ A developer should interact with an higher level, that's much more for sys-admin
                  device dirver settings or from the structure of our deployment tree.
                  SecurityGroup (it's just like a set of firewall rules to apply) can be added automatically by
                  the elb device driver from the minor number (Listener field)
-                 TargetGroupt can be created later once a EC2 AMI instance has been added as leaf nod of the 
-                 deployment tree.
+                 TargetGroupt can be created later once a EC2 AMI instance or a LAMBDA function have been added
+                 as leaf nodes of the deployment tree.
                  
-                 elb gets some input (requests on some ports that will be filtered by a SecurityGroup) and ofc
-                 return some output (same requests but routed to all the elements of a TargetGroup) so it can 
+                 How can TargetGroups/SecurityGroups be attached to ELB?
+                 
+                 elb gets some inputs (requests on some ports that will be filtered by a SecurityGroup) and ofc
+                 return some outputs (same requests but routed to all the elements of a TargetGroup) so it can 
                  be seen as a process and as any process in a system it has a STDIN (file descriptor = 1) and a
                  STDOUT (file descriptor = 2) attached to it.
                  
                  INPUT is its default SecurityGroup, OUTPUT is its default TargetGroup generated automatically 
                  when the deplyment tree will be traversed to create deployment code (building phase?!?)
                  
-                 But as in I/O subsystem you can attach oters INPUT/OUTPUT file descriptors to a process
-                 exec 3 > a_new_file (it will create a new OUTPUT file descriptor 3 ... 0,1,2 are already taken)
+                 INPUT                                     OUTPUT
+                 +----------+          +-----+         +--------+
+                 | Security |          |     |         | Target |
+                 |          |=========>| ELB |========>|        |
+                 | Group    |          |     |         | Group  |
+                 +----------+          +-----+         +--------+
+                 
+                 But as in I/O subsystem you can attach oters INPUT/OUTPUT file descriptors to a process or even
+                 better override existing ones.
+                 
+                 exec 3 > a_new_file (it will add a new OUTPUT file descriptor 3 and attach it to a_new_file... 
+                                      0,1,2 are already taken)
+                 
+                 exec 0 < a_new_file (it will attach STDIN file desciptor to a_new_file and detach it from keyboard
+                 
+                 So if at the end of the deployment tree we will have an AMI instance and a LAMBDA function our tra-
+                 versal (building?!) procedure we'll just attach 2 OUTPUT file descriptors (one for AMI EC2 and one
+                 for LAMBDA) to ELB. Anyway the possibility to crate  manually at low level SecurityGroups or Target
+                 Groups can be achieved with something like "co2 exec" cli coomands
+                 
+                 Tha same process could be applied to other services with INPUT and OUTPUT (LAMBDA, SQS etc.)
+                 
+                 
+                 
