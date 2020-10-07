@@ -646,7 +646,7 @@ A developer should interact with an higher level, that's much more for sys-admin
            fnod should permit to define subnet masks for each subnets and choose different AZ(s) for
            the different subnets for autoscaling or simply define a name for those
 
-* `co2 mount /dev/vpca /home/antonio/projects/hello_world/.co2`
+* `co2 mount /dev/vpca /home/antonio/projects/hello_world/.co2/vpca`
 
            .co2/
            └── vpca
@@ -710,4 +710,10 @@ A developer should interact with an higher level, that's much more for sys-admin
                  Tha same process could be applied to other services with INPUT and OUTPUT (LAMBDA, SQS etc.)
                  
                  
-                 
+* `co2 mount /dev/elb0 /home/antonio/projects/hello_world/.co2/vpca`
+
+           .co2/
+           └── vpca
+               └── elb0
+                   ├── vpcaSub1
+                   └── vpcaSub2
