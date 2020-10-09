@@ -717,3 +717,58 @@ A developer should interact with an higher level, that's much more for sys-admin
                └── elb0
                    ├── vpcaSub1
                    └── vpcaSub2
+
+
+# co2 Architecture
+
+
+```
++---------------------------------------------------------+
+| User processes                                          |
+| co2 commands:                                           |           
+|  * co2 init ...                                         |
+|  * "co2 mount ...                                       |
+|                                                         |
+|          |              |               |               |
+|         \|/            \|/             \|/              |
++----[ open() ]-----[ read() ]-----[ write() ]------------+
+|          |              |               |               |
+|         \|/            \|/             \|/              |
+|  +-------------------------------------------------+    |
+|  |       DEVICE INDEPENDENT SOFTWARE               |    |
+|  |                                                 |    |
+|  | * init()  : initialize device drivers params    |    |
+|  | * ioctl() : set device drivers params           |    |
+|  | * open()  : traverse deployment tree and create |    |
+|  |             controllers data structures         |    |
+|  | * read()  : retrieve controller data structures |    |
+|  | * wirte() : write controller code               |    |
+|  |                                                 |    |
+|  [ init()]--[ioctl()]--[open()]--[read()]--[write()]    |
+|        |          |         |         |          |      |
+|       \|/        \|/       \|/       \|/        \|/     |
+|  +--------------------------------------------------+   |
+|  |     DEVICE DEPENDENT SOFTWARE (DEVICE DRIVERS)   |   |
+|  |                                                  |   |
+|  |  +-----------+                     +-----------+ |   |
+|  |  | Driver #1 | ... ... .... ... .. | Driver #n | |   |
+|  |  +-----------+                     +-----------+ |   |
+|  +--------------------------------------------------+   |
+|                          | | very specific interface    |
+|                          | | depending on the device    |
+|                          \./ a driver have to talk      |
+|  +--------------------------------------------------+   |
+|  |                  CONTROLLERS                     |   |
+|  |                                                  |   |
+|  |  +---------+                    +--------------+ |   |
+|  |  | aws CDK | ... ... ... ... .. | Controller #n| |   |
+|  |  +---------+                    +--------------+ |   |
+|  +--------------------------------------------------+   |
+|                          | |                            |
+|                          | |                            |
+|                          \./                            |
+|  +--------------------------------------------------+   |
+|  |                  DEPLOYMENT CODE                 |   |
+|  +--------------------------------------------------+   |
++---------------------------------------------------------+
+```
