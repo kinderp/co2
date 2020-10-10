@@ -782,7 +782,9 @@ A: CREATE NODE /app
      (*) get the lowest free t_nodes_number in SUPERBLOCK.BITMAP (e.g. 2)
      (*) retrieve / TNode (it's always 0) from SUPERBLOCK.VECTOR
      (*) write ( 2, 'app' ) in / TNode.DIR_TABLE
-     (*) create a new TNode for /app (set type=[d]irectory, create block) 
+     (*) create a new Block for 'app'
+     (*) Add new 'app' Block to / Block childrens
+     (*) create a new TNode for /app (set type=[d]irectory, set 'app' Block in TNode.block) 
      (*) save /app TNode in SUPERBLOCK.VECOTR[2]
 
 B: CREATE NODE /app/vpc1
