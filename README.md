@@ -772,3 +772,42 @@ A developer should interact with an higher level, that's much more for sys-admin
 |  +--------------------------------------------------+   |
 +---------------------------------------------------------+
 ```
+
+
+```
+
+A: CREATE NODE /app 
+  1. mknod /app    USER PROCESS COMMAND
+  2. open('/app')  DEVICE INDEPENDET CALL
+     (*) get the lowest free t_nodes_number in SUPERBLOCK.BITMAP (e.g. 2)
+     (*) retrieve / TNode (it's always 0) from SUPERBLOCK.VECTOR
+     (*) write ( 2, 'app' ) in / TNode.DIR_TABLE
+     (*) create a new TNode for /app (set type=[d]irectory, create block) 
+     (*) save /app TNode in SUPERBLOCK.VECOTR[2]
+
+B: CREATE NODE /app/vpc1
+  1. mknod /app/vpc1
+  2. open('/app/vpc1')
+  
+C: MOUNT DEVICE FILE TO NODE /app/vpc1
+  1. mount /dev/vpca1 /app/vpc1
+                                                           TNODE
++-------------------------------------------+   +-----------------------+
+|               CO2 FILESYSTEM              |   |          BLOCK        |  
+|                                           |   +-----------------------+
+| +---------------------------------------+ |   |         DIR TABLE     |
+| |              SUPERBLOCK               | |   | tnode_number filename |
+| +----------------------+----------------+ |   |            2 /app     |
+| | TNODES NUMBER BITMAP | TNODES  VECTOR | |   |            3 /app2    |
+| |                      |                | |   +-----------------------+
+| | 0 1 2 3 4 ........N  | 0 Ptr -> TNode | |   |          MAJOR        |
+| | x o x x o ........x. | 1 Ptr -> TNone | |   +-----------------------+
+| +----------------------+ 2 Ptr -> TNode | |   |          MINOR        |
+|                        | 3 Ptr -> TNode | |   +-----------------------+
+|                        | 4 Ptr -> None  | |   |          TYPE         |          
+|                        |      ...       | |   +-----------------------+
+|                        |      ...       | |
+|                        | N Ptr -> TNode | |
+|                        +----------------+ |
++-------------------------------------------+
+```
