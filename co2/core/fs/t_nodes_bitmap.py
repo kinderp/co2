@@ -1,6 +1,12 @@
+from pprint import pprint
+
 class TNodesBitmap:
 
     bitmap = {0:True}
+
+    def __repr__(self):
+        pprint(self.bitmap)
+        return super().__repr__()
 
     @classmethod
     def _add(cls, t_node_number : int):

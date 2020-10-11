@@ -1,7 +1,11 @@
 from .t_node import TNode
+from .block import Block
+from .types import Types
 
 class TNodesVector:
-    vector = {}
+    vector = {
+                0: TNode(filename="/", block=Block(name="/", children=[]), type=Types.DIRECTORY)
+    }
 
     @classmethod
     def add_entry(cls, vector_entry : TNode, vector_entry_index : int):

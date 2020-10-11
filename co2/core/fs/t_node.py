@@ -1,3 +1,5 @@
+from pprint import pprint
+
 from .block import Block
 from .dir_table import DirTable
 from .types import Types
@@ -9,9 +11,16 @@ class TNode:
         self.__minor_number = -1
         self.__block_address = block
         if self.__block_address:
-            self.__block_address = self.__filename
+            self.__block_address.name = self.__filename
         self.__dir_table = DirTable()
         self.__type = type
+
+    #def __repr__(self):
+    #    print("filename={}".format(filename))
+    #    print("type={}".format(self.__type))
+    #    print("major_number={} minor_number={}".format(self.__major_number,self.__minor_number))
+    #    print("block={}".format(self.__block_address))
+    #    print("dir_table={}".format(self.__dir_table))
 
     @property
     def filename(self) -> str:
@@ -27,7 +36,7 @@ class TNode:
 
     @property
     def dir_table(self):
-        return self.__dir_table.table
+        return self.__dir_table
 
     @property
     def type(self):
