@@ -91,7 +91,7 @@ class Fs:
     }
 
     @classmethod
-    def _traverse_path2(cls, path_tokens            : list,
+    def _traverse_path(cls, path_tokens            : list,
                             level                   : int,
                             t_node_number           : int,
                             handler_type            : int,
@@ -149,49 +149,14 @@ class Fs:
             return cls.handlers[handler_type](cls.superblock,
                                               TraverseCases.CASE_3, **handler_function_kwargs)
         else:
-            return cls._traverse_path2(path_tokens, level + 1,
+            return cls._traverse_path(path_tokens, level + 1,
                                        next_t_node_number, handler_type,
                                        handler_function_kwargs)
 
     @classmethod
-    def _traverse_path(cls, path_tokens   : list,
-                            level         : int,
-                            t_node_number : int,
-                            creat         : bool  = False,
-                            type          : Types = Types.REGULAR,
-                      ):
-        current_branch = path_tokens[level]
-        t_node = cls.superblock.vector.get_entry(t_node_number)
-        next_t_node_number = t_node.dir_table._get(current_branch)
-        if not next_t_node_number and (level + 1) == len(path_tokens):
-            # New file here, OK.
-            if creat:
-                free_t_node_number = cls.superblock.reserve_t_node_number()
-                cls.superblock.vector.add_entry(
-                    vector_entry_index = free_t_node_number,
-                    vector_entry       = TNode(filename=current_branch,
-                                               block=Block(name=current_branch,
-                                                           parent=t_node.block,),
-                                               type = type
-                                         )
-                )
-                t_node.add_dir_entry(free_t_node_number, current_branch)
-                return True
-            else:
-                # filename doesn't exist
-                return False
-        elif not next_t_node_number and (level + 1) < len(path_tokens):
-            # Path does not exist, error!
-            return False
-        else:
-            return cls._traverse_path(path_tokens, level + 1,
-                                      next_t_node_number, creat)
-
-    @classmethod
     def _new_node(cls, filename : str, type : Types):
         path_tokens = filename.split("/")[1:]
-        #return cls._traverse_path(path_tokens, 0, 0, True, type)
-        return cls._traverse_path2(path_tokens, 0, 0,
+        return cls._traverse_path(path_tokens, 0, 0,
                                    HandlersTypes.ADD_A_NODE,
                                    {
                                         "filename": None,
@@ -203,14 +168,13 @@ class Fs:
     @classmethod
     def _eat_path(cls, filename : str):
         path_tokens = filename.split("/")[1:]
-        #return cls._traverse_path(path_tokens, 0, 0, False, None)
-        return cls._traverse_path2(path_tokens, 0, 0,
+        return cls._traverse_path(path_tokens, 0, 0,
                                    HandlersTypes.OPEN_A_NODE, {})
 
     @classmethod
     def _del_node(cls, filename : str):
         path_tokens = filename.split("/")[1:]
-        return cls._traverse_path2(path_tokens, 0, 0,
+        return cls._traverse_path(path_tokens, 0, 0,
                                    HandlersTypes.DEL_A_NODE, {})
 
     @classmethod
