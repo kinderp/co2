@@ -194,8 +194,10 @@ class Fs:
 
     @classmethod
     def do_mkdir(cls, abs_filename, oflags : OFlags):
-        return cls.do_open(abs_filename, OFlags.O_WRONLY | OFlags.O_CREAT,
-                           Types.DIRECTORY)
+        if oflags & OFlags.O_CREAT:
+            return cls.do_open(abs_filename, OFlags.O_WRONLY | OFlags.O_CREAT,
+                               Types.DIRECTORY)
+        return cls.do_open(abs_filename, oflags, Types.DIRECTORY)
 
     @classmethod
     def do_rmdir(cls, abs_filename : str):
