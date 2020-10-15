@@ -2,9 +2,23 @@ import pytest
 from co2.core.fs import TNodesBitmap
 
 class TestClassTNodesBitmap:
-    @pytest.fixture
+    @pytest.yield_fixture
     def instance(self):
-        return TNodesBitmap()
+        bitmap = TNodesBitmap()
+        yield bitmap
+
+        # teardown for test_add()
+        bitmap._rem(1)
+        bitmap._rem(5)
+        bitmap._rem(99)
+
+        # teardown for test_rem()
+        # nothing to do
+
+        # teardown for test_get()
+        bitmap._rem(1)
+        bitmap._rem(3)
+
 
     def test_add(self, instance):
         instance._add(1)
@@ -14,6 +28,7 @@ class TestClassTNodesBitmap:
         assert 1  in instance.bitmap
         assert 5  in instance.bitmap
         assert 99 in instance.bitmap
+
 
     def test_rem(self, instance):
         instance._add(33)
@@ -29,6 +44,3 @@ class TestClassTNodesBitmap:
         t_nodes_number = instance._get()
         assert t_nodes_number == 2
 
-        instance._rem(0)
-        t_nodes_number = instance._get()
-        assert t_nodes_number == 0

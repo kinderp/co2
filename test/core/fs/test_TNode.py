@@ -8,10 +8,13 @@ class TestClassTNode:
         filename = "Francesco"
         children = [Block("Giuseppe"), Block("Antonio"), Block("Teresa")]
         parent   = Block("Peppino")
-        return TNode(
+        t_node   =  TNode(
             filename = filename,
             block    = Block(filename, parent, children),
         )
+        yield t_node
+        # teardown test_add_dir_entry
+        t_node.rem_dir_entry("Test")
 
     def test_add_dir_entry(self, instance):
         instance.add_dir_entry(12, "Test")
