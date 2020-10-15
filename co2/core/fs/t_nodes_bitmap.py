@@ -18,8 +18,10 @@ class TNodesBitmap:
 
     @classmethod
     def _get(cls) -> int:
-        for t_node_number in range(0, max(cls.bitmap.keys())+1):
+        max_t_node_number = max(cls.bitmap.keys())
+        # start from 1 because 0 is reserved to / and can't used
+        for t_node_number in range(1, max_t_node_number + 1):
             if not cls.bitmap.get(t_node_number, None):
                 return t_node_number
-        return t_node_number + 1
+        return max_t_node_number + 1
 
