@@ -159,9 +159,9 @@ class Fs:
         return cls._traverse_path(path_tokens, 0, 0,
                                    HandlersTypes.ADD_A_NODE,
                                    {
-                                        "filename": None,
-                                        "t_node"  : None,
-                                        "type"    : type
+                                        "filename" : None,
+                                        "t_node"   : None,
+                                        "type"     : type
                                    },
                                   )
 
@@ -175,7 +175,13 @@ class Fs:
     def _del_node(cls, filename : str):
         path_tokens = filename.split("/")[1:]
         return cls._traverse_path(path_tokens, 0, 0,
-                                   HandlersTypes.DEL_A_NODE, {})
+                                   HandlersTypes.DEL_A_NODE,
+                                   {
+                                       "filename"      : None,
+                                       "t_node"        : None,
+                                       "t_node_number" : None,
+                                   }
+                                  )
 
     @classmethod
     def do_open(cls, abs_filename : str,
