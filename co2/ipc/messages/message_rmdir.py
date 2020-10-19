@@ -1,5 +1,6 @@
 from .message import Message
 
 class MessageRmdir(Message):
-    def __init__(self):
+    def __init__(self, code, description, args):
+        super().__init__(code, description, args)
         pass

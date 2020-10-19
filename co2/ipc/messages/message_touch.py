@@ -1,4 +1,4 @@
-from co2.ipc.messages import Message
+from .message import Message
 
 
 class MessageTouch(Message):
