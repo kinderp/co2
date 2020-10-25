@@ -4,9 +4,6 @@ from co2.ipc import Client
 from co2.ipc.messages import MessagesFactory
 
 class CommandTouch(Command):
-    def init(self, argsubparsers):
-        argsp = argsubparsers.add_parser("touch", help="Create a new file")
-        argsp.add_argument("path", help="Create a file", type=str)
 
     def execute(self, args):
         client = Client()
@@ -17,6 +14,3 @@ class CommandTouch(Command):
                 args,
             ).to_dict()
         )
-
-    def __init__(self, argsubparsers):
-        self.init(argsubparsers)

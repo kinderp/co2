@@ -33,10 +33,6 @@ class Command:
     __metaclass__ = ABCMeta
 
     @abstractmethod
-    def init(argsubparsers):
-        pass
-
-    @abstractmethod
     def execute(args):
         pass
 

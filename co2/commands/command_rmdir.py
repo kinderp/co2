@@ -4,9 +4,6 @@ from co2.ipc import Client
 from co2.ipc.messages import MessagesFactory
 
 class CommandRmdir(Command):
-    def init(self, argsubparsers):
-        argsp = argsubparsers.add_parser("rmdir", help="Remove a directory")
-        argsp.add_argument("path", help="Remove a file", type=str)
 
     def execute(self, args):
         client = Client()
@@ -17,6 +14,3 @@ class CommandRmdir(Command):
                 args,
             ).to_dict()
         )
-
-    def __init__(self, argsubparsers):
-        self.init(argsubparsers)

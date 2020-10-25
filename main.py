@@ -1,25 +1,17 @@
 #!/usr/bin/env python3
+import sys
+import argparse
 
 from co2.commands import CommandMkdir
 from co2.commands import CommandRmdir
 from co2.commands import CommandTouch
 from co2.commands import CommandRm
+from co2.commands import CommandsFactory
 
-import sys
-import argparse
+from co2.utils import CLIParser
 
-argparser = argparse.ArgumentParser(prog="co2", description="Back to the future...")
-argsubparsers = argparser.add_subparsers(title="Commands", dest="command")
-argsubparsers.required = True
-
-COMMANDS = {
-	"mkdir": CommandMkdir(argsubparsers),
-	"rmdir": CommandRmdir(argsubparsers),
-	"touch": CommandTouch(argsubparsers),
-	"rm"   :    CommandRm(argsubparsers),
-}
 
 if __name__ == "__main__":
-	argv = sys.argv[1:]
-	args = argparser.parse_args(argv)
-	COMMANDS[args.command].execute(args)
+    CLIParser.init()
+    args = CLIParser.parse(sys.argv[1:])
+    CommandsFactory.create(args.command).execute(args)
