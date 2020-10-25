@@ -1,7 +1,7 @@
 from co2.commands import Command
-from co2.commands import CO2Commands
 from co2.ipc import Client
 from co2.ipc.messages import MessagesFactory
+from co2.ipc.messages import CO2Messages
 
 class CommandRm(Command):
 
@@ -9,8 +9,8 @@ class CommandRm(Command):
         client = Client()
         client.execute(
             MessagesFactory.create(
-                CO2Commands.CO2_RM,
-                CO2Commands.look_up(CO2Commands.CO2_RM),
+                CO2Messages.CO2_RM,
+                CO2Messages.look_up(CO2Commands.CO2_RM),
                 args,
-            ).to_dict()
+            )
         )

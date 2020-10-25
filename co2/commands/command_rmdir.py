@@ -1,7 +1,7 @@
 from co2.commands import Command
-from co2.commands import CO2Commands
 from co2.ipc import Client
 from co2.ipc.messages import MessagesFactory
+from co2.ipc.messages import CO2Messages
 
 class CommandRmdir(Command):
 
@@ -12,5 +12,5 @@ class CommandRmdir(Command):
                 CO2Commands.CO2_RMDIR,
                 CO2Commands.look_up(CO2Commands.CO2_RMDIR),
                 args,
-            ).to_dict()
+            )
         )

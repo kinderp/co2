@@ -3,8 +3,6 @@ from .command_rm import CommandRm
 from .command_mkdir import CommandMkdir
 from .command_rmdir import CommandRmdir
 
-from co2.commands import CO2Commands
-
 
 class CommandsFactory:
 
