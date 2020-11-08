@@ -7,6 +7,12 @@ class IOSystemCalls:
     fs = Fs()
 
     @classmethod
+    def init(cls):
+        cls.mkdir("/dev")
+        cls.mknod("/dev/hda", 1, 2)
+        cls.mknod("/dev/console", 3, 4)
+
+    @classmethod
     def open(cls, abs_filename : str, oflags : OFlags):
         return cls.fs.do_open(abs_filename, oflags, FilesTypes.REGULAR)
 
@@ -16,7 +22,7 @@ class IOSystemCalls:
 
     @classmethod
     def mkdir(cls, abs_filename : str):
-        return cls.fs.do_mkdir(abs_filename, FilesTypes.DIRECTORY)
+        return cls.fs.do_mkdir(abs_filename, OFlags.O_WRONLY | OFlags.O_CREAT)
 
     @classmethod
     def rmdir(cls, abs_filename : str):
