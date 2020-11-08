@@ -16,8 +16,12 @@ class IOSystemCalls:
 
     @classmethod
     def mkdir(cls, abs_filename : str):
-       return cls.fs.do_mkdir(abs_filename, FilesTypes.DIRECTORY)
+        return cls.fs.do_mkdir(abs_filename, FilesTypes.DIRECTORY)
 
     @classmethod
     def rmdir(cls, abs_filename : str):
-       return cls.fs.do_rmdir(abs_filename)
+        return cls.fs.do_rmdir(abs_filename)
+
+    @classmethod
+    def mknod(cls, abs_filename : str, major : int, minor : int):
+        return cls.fs.do_mknod(abs_filename, major, minor)
