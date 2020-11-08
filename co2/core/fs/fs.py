@@ -26,17 +26,23 @@ class HandlersTypes:
 
 class HandlersFunctions:
         @staticmethod
-        def add_a_node(superblock : Superblock, case : int, filename : str, t_node : TNode, type : Types):
+        def add_a_node(superblock : Superblock, case : int, filename : str,
+                       t_node : TNode, type : Types, major : int=-1, minor : int=-1):
             if case == TraverseCases.CASE_1:
                 return False
             elif case == TraverseCases.CASE_2:
                 free_t_node_number = superblock.reserve_t_node_number()
                 superblock.vector.add_entry(
                     vector_entry_index = free_t_node_number,
-                    vector_entry       = TNode(filename=filename,
-                                               block=Block(name=filename,
-                                                           parent=t_node.block,),
-                                               type = type
+                    vector_entry       = TNode(
+                                                filename=filename,
+                                                block=Block(
+                                                    name=filename,
+                                                    parent=t_node.block,
+                                                ),
+                                                type = type,
+                                                major=major,
+                                                minor=minor,
                                          )
                 )
                 t_node.add_dir_entry(free_t_node_number, filename)
@@ -154,14 +160,16 @@ class Fs:
                                        handler_function_kwargs)
 
     @classmethod
-    def _new_node(cls, filename : str, type : Types):
+    def _new_node(cls, filename : str, type : Types, major : int=-1, minor : int=-1):
         path_tokens = filename.split("/")[1:]
         return cls._traverse_path(path_tokens, 0, 0,
                                    HandlersTypes.ADD_A_NODE,
                                    {
                                         "filename" : None,
                                         "t_node"   : None,
-                                        "type"     : type
+                                        "type"     : type,
+                                        "major"    : major,
+                                        "minor"    : minor,
                                    },
                                   )
 
@@ -206,6 +214,10 @@ class Fs:
     @classmethod
     def do_unlink(cls, abs_filename : str):
         return cls._del_node(abs_filename)
+
+    @classmethod
+    def do_mknod(cls, abs_filename : str, major : int, minor : int):
+        return cls._new_node(abs_filename, Types.SPECIAL, major, minor)
 
     def __init__(self):
         pass

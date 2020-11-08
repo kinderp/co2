@@ -5,10 +5,11 @@ from .dir_table import DirTable
 from .types import Types
 
 class TNode:
-    def __init__(self, filename : str, block : Block=None, type: str=Types.REGULAR):
+    def __init__(self, filename : str, block : Block=None, type:
+                 str=Types.REGULAR, major : int=-1, minor : int=-1):
         self.__filename = filename
-        self.__major_number = -1
-        self.__minor_number = -1
+        self.__major_number = major
+        self.__minor_number = minor
         self.__block_address = block
         if self.__block_address:
             self.__block_address.name = self.__filename
@@ -40,7 +41,15 @@ class TNode:
 
     @property
     def type(self):
-        return self.type
+        return self.__type
+
+    @property
+    def major(self):
+        return self.__major_number
+
+    @property
+    def minor(self):
+        return self.__minor_number
 
     def add_dir_entry(self, t_node_number : int, filename : str):
         self.__dir_table._add(t_node_number, filename)
