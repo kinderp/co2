@@ -36,7 +36,7 @@ class Message:
         return {
             "code": self.code,
             "description": self.description,
-            "data": vars(self.raw_data)
+            "data": vars(self.raw_data) if self.raw_data else {}
         }
 
 class MessageError(Message):
