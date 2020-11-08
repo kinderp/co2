@@ -10,7 +10,7 @@ class CommandRm(Command):
         client.execute(
             MessagesFactory.create(
                 CO2Messages.CO2_RM,
-                CO2Messages.look_up(CO2Commands.CO2_RM),
+                CO2Messages.look_up(CO2Messages.CO2_RM),
                 args,
             )
         )

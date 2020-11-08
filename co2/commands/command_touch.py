@@ -9,8 +9,8 @@ class CommandTouch(Command):
         client = Client()
         client.execute(
             MessagesFactory.create(
-                CO2Commands.CO2_TOUCH,
-                CO2Commands.look_up(CO2Commands.CO2_TOUCH),
+                CO2Messages.CO2_TOUCH,
+                CO2Messages.look_up(CO2Messages.CO2_TOUCH),
                 args,
             )
         )

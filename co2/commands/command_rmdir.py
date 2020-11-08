@@ -9,8 +9,8 @@ class CommandRmdir(Command):
         client = Client()
         client.execute(
             MessagesFactory.create(
-                CO2Commands.CO2_RMDIR,
-                CO2Commands.look_up(CO2Commands.CO2_RMDIR),
+                CO2Messages.CO2_RMDIR,
+                CO2Messages.look_up(CO2Messages.CO2_RMDIR),
                 args,
             )
         )
