@@ -1,3 +1,5 @@
+import shelve
+
 from co2.core.fs import Superblock
 from co2.core.fs import TNode
 from co2.core.fs import Block
@@ -88,23 +90,23 @@ class HandlersFunctions:
 
 class Fs:
 
-    superblock = Superblock()
+    def __init__(self, s_dev, s_isup, s_imount):
+        self.superblock = Superblock(s_dev, s_isup, s_imount)
 
-    handlers = {
-        HandlersTypes.ADD_A_NODE  : HandlersFunctions.add_a_node,
-        HandlersTypes.DEL_A_NODE  : HandlersFunctions.del_a_ndoe,
-        HandlersTypes.OPEN_A_NODE : HandlersFunctions.open_a_node,
-    }
+        self.handlers = {
+            HandlersTypes.ADD_A_NODE  : HandlersFunctions.add_a_node,
+            HandlersTypes.DEL_A_NODE  : HandlersFunctions.del_a_ndoe,
+            HandlersTypes.OPEN_A_NODE : HandlersFunctions.open_a_node,
+        }
 
-    @classmethod
-    def _traverse_path(cls, path_tokens            : list,
-                            level                   : int,
-                            t_node_number           : int,
-                            handler_type            : int,
-                            handler_function_kwargs : dict,
+    def _traverse_path(self, path_tokens             : list,
+                             level                   : int,
+                             t_node_number           : int,
+                             handler_type            : int,
+                             handler_function_kwargs : dict,
                       ):
         current_branch = path_tokens[level]
-        t_node = cls.superblock.vector.get_entry(t_node_number)
+        t_node = self.superblock.vector.get_entry(t_node_number)
         next_t_node_number = t_node.dir_table._get(current_branch)
         if next_t_node_number and (level + 1 ) == len(path_tokens):
             # Case#1: Found a leaf
@@ -113,17 +115,17 @@ class Fs:
             # OPEN_A_NODE : File found          OK
             # DEL_A_NODE  : File found          OK
             if handler_type == HandlersTypes.ADD_A_NODE:
-                return cls.handlers[handler_type](cls.superblock,
+                return self.handlers[handler_type](self.superblock,
                                                   TraverseCases.CASE_1, **handler_function_kwargs)
             elif handler_type == HandlersTypes.OPEN_A_NODE:
-                return cls.handlers[handler_type](cls.superblock,
+                return self.handlers[handler_type](self.superblock,
                                                   TraverseCases.CASE_1, **handler_function_kwargs)
                 pass
             elif handler_type == HandlersTypes.DEL_A_NODE:
                 handler_function_kwargs.update({"filename"      : current_branch}     )
                 handler_function_kwargs.update({"t_node"        : t_node}             )
                 handler_function_kwargs.update({"t_node_number" : next_t_node_number} )
-                return cls.handlers[handler_type](cls.superblock,
+                return self.handlers[handler_type](self.superblock,
                                                   TraverseCases.CASE_1, **handler_function_kwargs)
             else:
                 pass
@@ -136,13 +138,13 @@ class Fs:
             if handler_type == HandlersTypes.ADD_A_NODE:
                 handler_function_kwargs.update({"filename": current_branch} )
                 handler_function_kwargs.update({"t_node"  : t_node}         )
-                return cls.handlers[handler_type](cls.superblock,
+                return self.handlers[handler_type](self.superblock,
                                                   TraverseCases.CASE_2, **handler_function_kwargs)
             elif handler_type == HandlersTypes.OPEN_A_NODE:
-                return cls.handlers[handler_type](cls.superblock,
+                return self.handlers[handler_type](self.superblock,
                                                   TraverseCases.CASE_2, **handler_function_kwargs)
             elif handler_type == HandlersTypes.DEL_A_NODE:
-                return cls.handlers[handler_type](cls.superblock,
+                return self.handlers[handler_type](self.superblock,
                                                   TraverseCases.CASE_2, **handler_function_kwargs)
             else:
                 pass
@@ -152,17 +154,16 @@ class Fs:
             # ADD_A_NODE  : Path does not exist     KO
             # OPEN_A_NODE : Path does not exist     KO
             # DEL_A_NODE  : Path does not exist     KO
-            return cls.handlers[handler_type](cls.superblock,
+            return self.handlers[handler_type](self.superblock,
                                               TraverseCases.CASE_3, **handler_function_kwargs)
         else:
-            return cls._traverse_path(path_tokens, level + 1,
+            return self._traverse_path(path_tokens, level + 1,
                                        next_t_node_number, handler_type,
                                        handler_function_kwargs)
 
-    @classmethod
-    def _new_node(cls, filename : str, type : Types, major : int=-1, minor : int=-1):
+    def _new_node(self, filename : str, type : Types, major : int=-1, minor : int=-1):
         path_tokens = filename.split("/")[1:]
-        return cls._traverse_path(path_tokens, 0, 0,
+        return self._traverse_path(path_tokens, 0, 0,
                                    HandlersTypes.ADD_A_NODE,
                                    {
                                         "filename" : None,
@@ -173,16 +174,14 @@ class Fs:
                                    },
                                   )
 
-    @classmethod
-    def _eat_path(cls, filename : str):
+    def _eat_path(self, filename : str):
         path_tokens = filename.split("/")[1:]
-        return cls._traverse_path(path_tokens, 0, 0,
+        return self._traverse_path(path_tokens, 0, 0,
                                    HandlersTypes.OPEN_A_NODE, {})
 
-    @classmethod
-    def _del_node(cls, filename : str):
+    def _del_node(self, filename : str):
         path_tokens = filename.split("/")[1:]
-        return cls._traverse_path(path_tokens, 0, 0,
+        return self._traverse_path(path_tokens, 0, 0,
                                    HandlersTypes.DEL_A_NODE,
                                    {
                                        "filename"      : None,
@@ -191,33 +190,31 @@ class Fs:
                                    }
                                   )
 
-    @classmethod
-    def do_open(cls, abs_filename : str,
+    def do_open(self, abs_filename : str,
                            oflags : OFlags,
                            type   : Types=Types.REGULAR):
         if oflags & OFlags.O_CREAT:
             # Create a new TNode, _calling new_node()
-            return cls._new_node(abs_filename, type)
-        return cls._eat_path(abs_filename)
+            return self._new_node(abs_filename, type)
+        return self._eat_path(abs_filename)
 
-    @classmethod
-    def do_mkdir(cls, abs_filename, oflags : OFlags):
+    def do_mkdir(self, abs_filename, oflags : OFlags):
         if oflags & OFlags.O_CREAT:
-            return cls.do_open(abs_filename, OFlags.O_WRONLY | OFlags.O_CREAT,
+            return self.do_open(abs_filename, OFlags.O_WRONLY | OFlags.O_CREAT,
                                Types.DIRECTORY)
-        return cls.do_open(abs_filename, oflags, Types.DIRECTORY)
+        return self.do_open(abs_filename, oflags, Types.DIRECTORY)
 
-    @classmethod
-    def do_rmdir(cls, abs_filename : str):
-        return cls._del_node(abs_filename)
+    def do_rmdir(self, abs_filename : str):
+        return self._del_node(abs_filename)
 
-    @classmethod
-    def do_unlink(cls, abs_filename : str):
-        return cls._del_node(abs_filename)
+    def do_unlink(self, abs_filename : str):
+        return self._del_node(abs_filename)
 
-    @classmethod
-    def do_mknod(cls, abs_filename : str, major : int, minor : int):
-        return cls._new_node(abs_filename, Types.SPECIAL, major, minor)
+    def do_mknod(self, abs_filename : str, major : int, minor : int):
+        return self._new_node(abs_filename, Types.SPECIAL, major, minor)
 
-    def __init__(self):
-        pass
+    def do_fsynch(self):
+        db = shelve.open(".co2_db")
+        db[self.superblock.s_dev] = self
+        db.close()
+
