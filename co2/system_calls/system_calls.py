@@ -1,25 +1,36 @@
 from pathlib import Path
 import shelve
-
-from co2.core.fs import Fs
+from co2.core.fs import TNode
 from co2.core.fs import Types as FilesTypes
 from co2.core.fs import OFlags
+from co2.core.fs import Fs
+
 
 class IOSystemCalls:
+    Path(".co2/objects").mkdir(parents=True, exist_ok=True)
+    db = shelve.open(".co2/objects/co2")
 
     super_table = {
-        'ram0': Fs(s_dev='ram0', s_isup=None, s_imount=None)
+        'ram0': Fs(s_dev='ram0', s_imount=None)
     }
 
     @classmethod
-    def init(cls):
-        import pdb
-        pdb.set_trace()
+    def load_superblock(cls, s_dev : str, s_imount : TNode) -> bool:
+        if s_dev in cls.super_table:
+            # dev_t is already mounted on
+            return False
+        if s_dev in cls.db:
+            cls.super_table[s_dev] = cls.db[s_dev]
+            cls.super_table[s_dev].s_imount = s_imount
+        else:
+            cls.super_table[s_dev] = Fs(s_dev=s_dev,
+                                        s_imount=s_imount)
+        return True
 
-        Path(".co2/objects").mkdir(parents=True, exist_ok=True)
-        db = shelve.open(".co2/objects/co2")
-        if 'ram0' in db:
-            cls.super_table['ram0'] = db['ram0']
+    @classmethod
+    def init(cls):
+        if 'ram0' in cls.db:
+            cls.super_table['ram0'] = cls.db['ram0']
         else:
             cls.mkdir("/dev", dev_t='ram0')
             #cls.mknod("/dev/hda", 1, 2, dev_t='ram0')
@@ -49,3 +60,6 @@ class IOSystemCalls:
     def fsynch(cls, dev_t : str = 'ram0'):
         cls.super_table.get(dev_t).do_fsynch()
 
+    @classmethod
+    def mount(cls, dev_t : str, m_point : str):
+        return cls.super_table.get('ram0').do_mount(dev_t, m_point)

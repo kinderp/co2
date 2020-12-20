@@ -1,9 +1,11 @@
 import shelve
 
+import co2
 from co2.core.fs import Superblock
 from co2.core.fs import TNode
 from co2.core.fs import Block
 from co2.core.fs import Types
+
 
 class OFlags:
     # File access mode for open()
@@ -21,9 +23,10 @@ class TraverseCases:
         CASE_3 = 2
 
 class HandlersTypes:
-        ADD_A_NODE  = 0
-        DEL_A_NODE  = 1
-        OPEN_A_NODE = 2
+        ADD_A_NODE   = 0
+        DEL_A_NODE   = 1
+        OPEN_A_NODE  = 2
+        MOUNT_A_NODE = 3
 
 
 class HandlersFunctions:
@@ -87,16 +90,38 @@ class HandlersFunctions:
                 # Not supported cases
                 return False
 
+        @staticmethod
+        def mount_a_node(case : int, t_node : TNode, s_dev : str):
+            if case == TraverseCases.CASE_1:
+                t_node.is_mount_point = True
+                t_node.s_dev = s_dev
+
+                is_loaded = co2.system_calls.IOSystemCalls.load_superblock(s_dev=s_dev,
+                                                        s_imount=t_node)
+                if not is_loaded:
+                    return False
+
+                return True
+            elif case == TraverseCases.CASE_2:
+                return False
+            elif case == TraverseCases.CASE_3:
+                return False
+            else:
+                # Not supported cases
+                return False
+
+
 
 class Fs:
 
-    def __init__(self, s_dev, s_isup, s_imount):
-        self.superblock = Superblock(s_dev, s_isup, s_imount)
+    def __init__(self, s_dev, s_imount):
+        self.superblock = Superblock(s_dev, s_imount)
 
         self.handlers = {
             HandlersTypes.ADD_A_NODE  : HandlersFunctions.add_a_node,
             HandlersTypes.DEL_A_NODE  : HandlersFunctions.del_a_ndoe,
             HandlersTypes.OPEN_A_NODE : HandlersFunctions.open_a_node,
+            HandlersTypes.MOUNT_A_NODE: HandlersFunctions.mount_a_node,
         }
 
     def _traverse_path(self, path_tokens             : list,
@@ -104,47 +129,68 @@ class Fs:
                              t_node_number           : int,
                              handler_type            : int,
                              handler_function_kwargs : dict,
+                             s_dev                   : str = "ram0"
                       ):
         current_branch = path_tokens[level]
-        t_node = self.superblock.vector.get_entry(t_node_number)
+        current_superblock = co2.system_calls.IOSystemCalls.super_table[s_dev].superblock
+        t_node = current_superblock.vector.get_entry(t_node_number)
+
         next_t_node_number = t_node.dir_table._get(current_branch)
+        next_t_node = current_superblock.vector.get_entry(next_t_node_number)
+
+        if  next_t_node_number and next_t_node.is_mount_point:
+            return self._traverse_path(path_tokens, level + 1,
+                                       0, handler_type,
+                                       handler_function_kwargs,
+                                       next_t_node.s_dev
+                                      )
+
         if next_t_node_number and (level + 1 ) == len(path_tokens):
             # Case#1: Found a leaf
             #
-            # ADD_A_NODE  : File already exist  KO
-            # OPEN_A_NODE : File found          OK
-            # DEL_A_NODE  : File found          OK
+            # ADD_A_NODE   : File already exist  KO
+            # OPEN_A_NODE  : File found          OK
+            # DEL_A_NODE   : File found          OK
+            # MOUNT_A_NODE : File found          OK
             if handler_type == HandlersTypes.ADD_A_NODE:
-                return self.handlers[handler_type](self.superblock,
+                return self.handlers[handler_type](current_superblock,
                                                   TraverseCases.CASE_1, **handler_function_kwargs)
             elif handler_type == HandlersTypes.OPEN_A_NODE:
-                return self.handlers[handler_type](self.superblock,
+                return self.handlers[handler_type](current_superblock,
                                                   TraverseCases.CASE_1, **handler_function_kwargs)
                 pass
             elif handler_type == HandlersTypes.DEL_A_NODE:
                 handler_function_kwargs.update({"filename"      : current_branch}     )
                 handler_function_kwargs.update({"t_node"        : t_node}             )
                 handler_function_kwargs.update({"t_node_number" : next_t_node_number} )
-                return self.handlers[handler_type](self.superblock,
+                return self.handlers[handler_type](current_superblock,
                                                   TraverseCases.CASE_1, **handler_function_kwargs)
+            elif handler_type == HandlersTypes.MOUNT_A_NODE:
+                t_node_mount_point = current_superblock.vector.get_entry(next_t_node_number)
+                handler_function_kwargs.update({"t_node" : t_node_mount_point})
+                return self.handlers[handler_type](TraverseCases.CASE_1, **handler_function_kwargs)
             else:
                 pass
         elif not next_t_node_number and (level + 1) == len(path_tokens):
             # Case#2: Not found a leaf
             #
-            # ADD_A_NODE  : does not exist a file with the same name OK
-            # OPEN_A_NODE : file does not exist                      KO
-            # DEL_A_NODE  : file does not exist                      KO
+            # ADD_A_NODE   : does not exist a file with the same name OK
+            # OPEN_A_NODE  : file does not exist                      KO
+            # DEL_A_NODE   : file does not exist                      KO
+            # MOUNT_A_NODE : fiel does not exist                      KO
             if handler_type == HandlersTypes.ADD_A_NODE:
                 handler_function_kwargs.update({"filename": current_branch} )
                 handler_function_kwargs.update({"t_node"  : t_node}         )
-                return self.handlers[handler_type](self.superblock,
+                return self.handlers[handler_type](current_superblock,
                                                   TraverseCases.CASE_2, **handler_function_kwargs)
             elif handler_type == HandlersTypes.OPEN_A_NODE:
-                return self.handlers[handler_type](self.superblock,
+                return self.handlers[handler_type](current_superblock,
                                                   TraverseCases.CASE_2, **handler_function_kwargs)
             elif handler_type == HandlersTypes.DEL_A_NODE:
-                return self.handlers[handler_type](self.superblock,
+                return self.handlers[handler_type](current_superblock,
+                                                  TraverseCases.CASE_2, **handler_function_kwargs)
+            elif handler_type == HandlersTypes.MOUNT_A_NODE:
+                return self.handlers[handler_type](current_superblock,
                                                   TraverseCases.CASE_2, **handler_function_kwargs)
             else:
                 pass
@@ -154,7 +200,7 @@ class Fs:
             # ADD_A_NODE  : Path does not exist     KO
             # OPEN_A_NODE : Path does not exist     KO
             # DEL_A_NODE  : Path does not exist     KO
-            return self.handlers[handler_type](self.superblock,
+            return self.handlers[handler_type](current_superblock,
                                               TraverseCases.CASE_3, **handler_function_kwargs)
         else:
             return self._traverse_path(path_tokens, level + 1,
@@ -190,6 +236,11 @@ class Fs:
                                    }
                                   )
 
+    def _mount_node(self, dev_t : str, mount_point : str):
+        path_tokens = mount_point.split("/")[1:]
+        return self._traverse_path(path_tokens, 0, 0,
+                                   HandlersTypes.MOUNT_A_NODE, {"s_dev": dev_t})
+
     def do_open(self, abs_filename : str,
                            oflags : OFlags,
                            type   : Types=Types.REGULAR):
@@ -218,3 +269,8 @@ class Fs:
         db[self.superblock.s_dev] = self
         db.close()
 
+    def do_mount(self, dev_t : str, m_point : str):
+        block_device_exist = self._eat_path("/dev/{}".format(dev_t))
+        if block_device_exist:
+            return self._mount_node(dev_t, m_point)
+        return False

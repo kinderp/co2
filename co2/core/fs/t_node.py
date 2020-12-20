@@ -15,13 +15,30 @@ class TNode:
             self.__block_address.name = self.__filename
         self.__dir_table = DirTable()
         self.__type = type
-
+        self.__is_mpoint = False
+        self.__s_dev = None
     #def __repr__(self):
     #    print("filename={}".format(filename))
     #    print("type={}".format(self.__type))
     #    print("major_number={} minor_number={}".format(self.__major_number,self.__minor_number))
     #    print("block={}".format(self.__block_address))
     #    print("dir_table={}".format(self.__dir_table))
+
+    @property
+    def s_dev(self) -> str:
+        return self.__s_dev
+
+    @s_dev.setter
+    def s_dev(self, s_dev : str):
+        self.__s_dev = s_dev
+
+    @property
+    def is_mount_point(self) -> bool:
+        return self.__is_mpoint
+
+    @is_mount_point.setter
+    def is_mount_point(self, is_mpoint : bool):
+        self.__is_mpoint = is_mpoint
 
     @property
     def filename(self) -> str:
