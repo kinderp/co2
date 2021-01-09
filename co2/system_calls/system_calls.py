@@ -15,6 +15,18 @@ class IOSystemCalls:
     }
 
     @classmethod
+    def is_superblock_loaded(cls, s_dev : str) -> bool:
+        if s_dev in cls.super_table:
+            return True
+        return False
+
+    @classmethod
+    def unload_superblock(cls, s_dev : str, s_imount : TNode) -> bool:
+        if s_dev in cls.super_table:
+            cls.super_table.get(dev_t).do_fsynch()
+        return True
+
+    @classmethod
     def load_superblock(cls, s_dev : str, s_imount : TNode) -> bool:
         if s_dev in cls.super_table:
             # dev_t is already mounted on
@@ -26,6 +38,7 @@ class IOSystemCalls:
             cls.super_table[s_dev] = Fs(s_dev=s_dev,
                                         s_imount=s_imount)
         return True
+
 
     @classmethod
     def init(cls):
@@ -63,3 +76,7 @@ class IOSystemCalls:
     @classmethod
     def mount(cls, dev_t : str, m_point : str):
         return cls.super_table.get('ram0').do_mount(dev_t, m_point)
+
+    @classmethod
+    def umount(cls, dev_t : str, m_point : str):
+        return cls.super_table.get('ram0').do_umount(dev_t, m_point)
