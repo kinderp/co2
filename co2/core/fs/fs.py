@@ -32,11 +32,13 @@ class HandlersTypes:
 
 class HandlersFunctions:
         @staticmethod
-        def add_a_node(superblock : Superblock, case : int, filename : str,
-                       t_node : TNode, type : Types, major : int=-1, minor : int=-1):
+        def add_a_node(case : int, filename : str,
+                       t_node : TNode, type : Types, major : int=-1, minor :
+                       int=-1, s_dev : str = 'ram0'):
             if case == TraverseCases.CASE_1:
                 return False
             elif case == TraverseCases.CASE_2:
+                superblock = co2.system_calls.IOSystemCalls.super_table[s_dev].superblock
                 free_t_node_number = superblock.reserve_t_node_number()
                 superblock.vector.add_entry(
                     vector_entry_index = free_t_node_number,
@@ -60,9 +62,10 @@ class HandlersFunctions:
                 return False
 
         @staticmethod
-        def del_a_ndoe(superblock : Superblock, case : int, filename : str, t_node : TNode,
-                       t_node_number : int):
+        def del_a_ndoe(case : int, filename : str, t_node : TNode,
+                       t_node_number : int, s_dev : str = 'ram0'):
             if case == TraverseCases.CASE_1:
+                superblock = co2.system_calls.IOSystemCalls.super_table[s_dev].superblock
                 superblock.release_t_node_number(t_node_number)
                 superblock.vector.rem_entry(t_node_number)
                 old_children = list(t_node.block.children) # children it's a tuple :(
@@ -80,7 +83,7 @@ class HandlersFunctions:
                 return False
 
         @staticmethod
-        def open_a_node(superblock : Superblock, case : int):
+        def open_a_node(case : int):
             if case == TraverseCases.CASE_1:
                 return True
             elif case == TraverseCases.CASE_2:
@@ -92,7 +95,7 @@ class HandlersFunctions:
                 return False
 
         @staticmethod
-        def mount_a_node(case : int, t_node : TNode, s_dev : str):
+        def mount_a_node(case : int, t_node : TNode, s_dev : str = 'ram0'):
             if case == TraverseCases.CASE_1:
                 t_node.is_mount_point = True
                 t_node.s_dev = s_dev
@@ -113,21 +116,14 @@ class HandlersFunctions:
 
         @staticmethod
         def umount_a_node(case : int, t_node : TNode,
-                          t_node_number : int, s_dev : str):
+                          t_node_number : int, s_dev : str = 'ram0'):
             if case == TraverseCases.CASE_1:
                 is_loaded = co2.system_calls.IOSystemCalls.is_superblock_loaded(s_dev=s_dev)
                 t_node.is_mount_point = False
                 t_node.s_dev = None
+                co2.system_calls.IOSystemCalls.unload_superblock(s_dev)
                 if not is_loaded:
                     return False
-                superblock = co2.system_calls.IOSystemCalls.super_table[s_dev].superblock
-                superblock.release_t_node_number(t_node_number)
-                superblock.vector.rem_entry(t_node_number)
-                #old_children = list(t_node.block.children) # children it's a tuple :(
-                #for index, children in enumerate(old_children):
-                #    if children.name == filename:
-                #        old_children.pop(index)
-                #t_node.block.children = old_children
                 return True
             elif case == TraverseCases.CASE_2:
                 return False
@@ -166,24 +162,21 @@ class Fs:
         next_t_node = current_superblock.vector.get_entry(next_t_node_number)
 
         if  next_t_node_number and next_t_node.is_mount_point:
+            if handler_type == HandlersTypes.UMOUNT_A_NODE and next_t_node.s_dev == handler_function_kwargs['s_dev']:
+                t_node_mount_point = current_superblock.vector.get_entry(next_t_node_number)
+                handler_function_kwargs.update({"t_node" : t_node_mount_point})
+                handler_function_kwargs.update({"t_node_number" : next_t_node_number} )
+                return self.handlers[handler_type](TraverseCases.CASE_1, **handler_function_kwargs)
+
             s_dev = next_t_node.s_dev
-            if handler_type == HandlersTypes.MOUNT_A_NODE:
-                mount_path_tokens = path_tokens[level+1:]
-                level = 0
-                #s_dev = next_t_node.s_dev
-                mount_t_node_number = 0
-                return self._traverse_path(mount_path_tokens, level,
+            mount_path_tokens = path_tokens[level+1:]
+            level = 0
+            mount_t_node_number = 0
+            return self._traverse_path(mount_path_tokens, level,
                                        mount_t_node_number, handler_type,
                                        handler_function_kwargs,
                                        s_dev
-                )
-            #elif handler_type == HandlersTypes.UMOUNT_A_NODE:
-            #    pass
-            #else:
-            #    mount_path_tokens = path_tokens
-            #    level = level + 1
-            #    mount_t_node_number = t_node_number
-
+            ) 
         if next_t_node_number and (level + 1 ) == len(path_tokens):
             # Case#1: Found a leaf
             #
@@ -193,17 +186,16 @@ class Fs:
             # MOUNT_A_NODE  : File found          OK
             # UMOUNT_A_NODE : File found          OK
             if handler_type == HandlersTypes.ADD_A_NODE:
-                return self.handlers[handler_type](current_superblock,
-                                                  TraverseCases.CASE_1, **handler_function_kwargs)
+                handler_function_kwargs.update({"s_dev" : s_dev} )
+                return self.handlers[handler_type](TraverseCases.CASE_1, **handler_function_kwargs)
             elif handler_type == HandlersTypes.OPEN_A_NODE:
-                return self.handlers[handler_type](current_superblock,
-                                                  TraverseCases.CASE_1, **handler_function_kwargs)
+                return self.handlers[handler_type](TraverseCases.CASE_1, **handler_function_kwargs)
             elif handler_type == HandlersTypes.DEL_A_NODE:
+                handler_function_kwargs.update({"s_dev" : s_dev} )
                 handler_function_kwargs.update({"filename"      : current_branch}     )
                 handler_function_kwargs.update({"t_node"        : t_node}             )
                 handler_function_kwargs.update({"t_node_number" : next_t_node_number} )
-                return self.handlers[handler_type](current_superblock,
-                                                  TraverseCases.CASE_1, **handler_function_kwargs)
+                return self.handlers[handler_type](TraverseCases.CASE_1, **handler_function_kwargs)
             elif handler_type == HandlersTypes.MOUNT_A_NODE:
                 t_node_mount_point = current_superblock.vector.get_entry(next_t_node_number)
                 handler_function_kwargs.update({"t_node" : t_node_mount_point})
@@ -212,7 +204,6 @@ class Fs:
                 t_node_mount_point = current_superblock.vector.get_entry(next_t_node_number)
                 handler_function_kwargs.update({"t_node" : t_node_mount_point})
                 handler_function_kwargs.update({"t_node_number" : next_t_node_number} )
-                handler_function_kwargs.update({"s_dev" : s_dev} )
                 return self.handlers[handler_type](TraverseCases.CASE_1, **handler_function_kwargs)
             else:
                 pass
@@ -225,19 +216,17 @@ class Fs:
             # MOUNT_A_NODE  : fiel does not exist                      KO
             # UMOUNT_A_NODE : fiel does not exist                      KO
             if handler_type == HandlersTypes.ADD_A_NODE:
+                handler_function_kwargs.update({"s_dev" : s_dev} )
                 handler_function_kwargs.update({"filename": current_branch} )
                 handler_function_kwargs.update({"t_node"  : t_node}         )
-                return self.handlers[handler_type](current_superblock,
-                                                  TraverseCases.CASE_2, **handler_function_kwargs)
+                return self.handlers[handler_type](TraverseCases.CASE_2, **handler_function_kwargs)
             elif handler_type == HandlersTypes.OPEN_A_NODE:
-                return self.handlers[handler_type](current_superblock,
-                                                  TraverseCases.CASE_2, **handler_function_kwargs)
+                return self.handlers[handler_type](TraverseCases.CASE_2, **handler_function_kwargs)
             elif handler_type == HandlersTypes.DEL_A_NODE:
-                return self.handlers[handler_type](current_superblock,
-                                                  TraverseCases.CASE_2, **handler_function_kwargs)
+                handler_function_kwargs.update({"s_dev" : s_dev} )
+                return self.handlers[handler_type](TraverseCases.CASE_2, **handler_function_kwargs)
             elif handler_type == HandlersTypes.MOUNT_A_NODE:
-                return self.handlers[handler_type](current_superblock,
-                                                  TraverseCases.CASE_2, **handler_function_kwargs)
+                return self.handlers[handler_type](TraverseCases.CASE_2, **handler_function_kwargs)
             elif handler_type == HandlersTypes.UMOUNT_A_NODE:
                 handler_function_kwargs.update({"t_node_number": current_branch} )
                 handler_function_kwargs.update({"t_node"  : t_node}         )
@@ -253,12 +242,12 @@ class Fs:
             # DEL_A_NODE    : Path does not exist     KO
             # MOUNT_A_NODE  : fiel does not exist     KO
             # UMOUNT_A_NODE : fiel does not exist     KO
-            return self.handlers[handler_type](current_superblock,
-                                              TraverseCases.CASE_3, **handler_function_kwargs)
+            handler_function_kwargs.update({"s_dev" : s_dev} )
+            return self.handlers[handler_type](TraverseCases.CASE_3, **handler_function_kwargs)
         else:
             return self._traverse_path(path_tokens, level + 1,
                                        next_t_node_number, handler_type,
-                                       handler_function_kwargs)
+                                       handler_function_kwargs, s_dev)
 
     def _new_node(self, filename : str, type : Types, major : int=-1, minor : int=-1):
         path_tokens = filename.split("/")[1:]

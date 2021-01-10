@@ -21,9 +21,10 @@ class IOSystemCalls:
         return False
 
     @classmethod
-    def unload_superblock(cls, s_dev : str, s_imount : TNode) -> bool:
+    def unload_superblock(cls, s_dev : str) -> bool:
         if s_dev in cls.super_table:
-            cls.super_table.get(dev_t).do_fsynch()
+            cls.super_table.get(s_dev).do_fsynch()
+            cls.super_table.pop(s_dev, None)
         return True
 
     @classmethod
