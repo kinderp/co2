@@ -4,6 +4,8 @@ import os
 import struct
 import json
 
+from co2.core.interfaces.kernel import _SYSCALL
+
 class IO:
     def __init__(self):
         self.server_address = '/tmp/uds_socket'
@@ -39,7 +41,11 @@ class IO:
                     print("Received command:\n")
                     print(message)
                     # return a response
-                    response = {"code": 0, "description":"bla bla bla"}
+                    command = json.loads(message)
+                    exit = _SYSCALL(
+                        num=command['code'], args=command['data']
+                    )
+                    response = {"code": 0, "description": exit}
                     print("Sent response:\n")
                     print(response)
                     connection.sendall(json.dumps(response).encode('utf-8'))
