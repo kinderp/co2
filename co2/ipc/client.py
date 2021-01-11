@@ -16,7 +16,7 @@ class Client:
     def execute(self, command):
         try:
             # Send data.
-            message = json.dumps(command)
+            message = json.dumps(command.to_dict())
             print('sending {}'.format(message))
             self.sock.sendall(message.encode('utf-8'))
             response = self.sock.recv(1024)
