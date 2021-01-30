@@ -6,7 +6,9 @@ class CO2Messages:
     CO2_BUILD   = 3
     CO2_INSMOD  = 4
     CO2_RMOD    = 5
+    CO2_MKNOD   = 6
     CO2_MOUNT   = 100
+    CO2_UMOUNT  = 101
     CO2_TOUCH   = 1000
     CO2_RM      = 1001
     CO2_MKDIR   = 1002
@@ -28,7 +30,8 @@ class CO2Messages:
 
 class Message:
     def __init__(self, code, description, args):
-        self.raw_data = args
+        self.raw_data = vars(args)
+        self.data = {k: self.raw_data[k] for k in self.raw_data if k != "command"}
         self.code = code
         self.description = description
 
@@ -36,7 +39,7 @@ class Message:
         return {
             "code": self.code,
             "description": self.description,
-            "data": vars(self.raw_data) if self.raw_data else {}
+            "data": self.data
         }
 
 class MessageError(Message):

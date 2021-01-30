@@ -51,7 +51,7 @@ class IOSystemCalls:
             #cls.mknod("/dev/console", 3, 4, dev_t='ram0')
 
     @classmethod
-    def open(cls, abs_filename : str, oflags : OFlags, dev_t : str = 'ram0'):
+    def open(cls, abs_filename : str, oflags : OFlags = OFlags.O_CREAT | OFlags.O_WRONLY, dev_t : str = 'ram0'):
         return cls.super_table.get(dev_t).do_open(abs_filename, oflags, FilesTypes.REGULAR)
 
     @classmethod
@@ -60,7 +60,7 @@ class IOSystemCalls:
 
     @classmethod
     def mkdir(cls, abs_filename : str, dev_t : str = 'ram0'):
-        return cls.super_table.get(dev_t).do_mkdir(abs_filename, OFlags.O_WRONLY | OFlags.O_CREAT)
+        return cls.super_table.get(dev_t).do_mkdir(abs_filename,  OFlags.O_WRONLY | OFlags.O_CREAT)
 
     @classmethod
     def rmdir(cls, abs_filename : str, dev_t : str = 'ram0'):
