@@ -154,6 +154,75 @@ class Fs:
                              handler_function_kwargs : dict,
                              s_dev                   : str = "ram0"
                       ):
+        """Traverse recursively the whole filesystem tree applying handler_function_kwargs
+
+        Args:
+            path_tokens: absolute path to be traversed splitted in tokens ('/'
+            as delimeter)
+
+                e.g.
+                    '/mnt/hda/doc/test'
+                    path_tokens = ['mnt', 'hda', 'doc', 'test']
+
+            level: level of recursion, defined by current path_token 
+
+                e.g.
+                    '/mnt/hda/doc/test'
+                       ^   ^   ^   ^
+                       |   |   |   |
+           level=0 --- +   |   |   |
+           level=1 --------+   |   |
+           level=2 ------------+   |
+           level=3 ----------------+
+
+            t_node_number: it's really similar to an inode number on a real
+                           filesystem.
+
+                           Each device has a superblock.
+                           A superblock contains a TNode(s)' vector, we'll call it
+                           just Vector.
+                           Vector is composed by two fields:
+                               1. t_node_number ( 0 is reserved for root dir '/')
+                               2. a pointer to a TNode object.
+                                  Inside a TNode does exist a dir_table that
+                                  matches filenames with corresponding
+                                  t_node_number
+
+                           SUPERBLOCK.VECTOR              TNODE.DIR_TABLE
+                           +-----+-----+                  +-----+-----+
+                           | 0   | (*) |----------------->| mnt | 100 |
+                           +-----+-----+                  +-----+-----+  +-----+----+
+                           | 100 | (*) |-------------------------------->| hda | 24 |
+                           +-----+-----+           +-----+----+          +-----+----+
+                           | 24  | (*) |---------->| doc | 35 |
+                           +-----+-----+           +-----+----+
+                           | 35  | (*) |
+                           +-----+-----+
+
+            handler_type: Type of operation we wanna apply to target Node
+                          e.g.
+                                HandlersTypes.ADD_A_NODE
+                                HandlersTypes.DEL_A_NODE
+                                HandlersTypes.OPEN_A_NODE
+                                HandlersTypes.DEL_A_NODE
+                                HandlersTypes.MOUNT_A_NODE
+                                HandlersTypes.UMOUNT_A_NODE
+
+            handler_function_kwargs: kwargs passed to handler_type function
+                                     once a target node is reached out
+
+            s_dev: It's a superblock device identifier in the super_table.
+                   Each device has a superblock that will be loaded by fs core
+                   classes in a datastructure (just a dict) called super_table.
+                   Once a mount_point will be encounterd during traversing path
+                   s_dev will be changed to that one for the device moutend
+                   upon.
+
+
+        Returns:
+                True of False
+        Raises:
+        """
         current_branch = path_tokens[level]
         current_superblock = co2.system_calls.IOSystemCalls.super_table[s_dev].superblock
         t_node = current_superblock.vector.get_entry(t_node_number)
