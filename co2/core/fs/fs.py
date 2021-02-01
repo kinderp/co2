@@ -147,6 +147,47 @@ class Fs:
             HandlersTypes.UMOUNT_A_NODE: HandlersFunctions.umount_a_node,
         }
 
+    def render(self, t_node_number, _prefix="", _last=True, level=0):
+        current_superblock = co2.system_calls.IOSystemCalls.super_table["ram0"].superblock
+        t_node = current_superblock.vector.get_entry(t_node_number)
+        if level==0:
+            print("   " + t_node.filename)
+        else:
+            print(_prefix, "+- " if _last else "|- ", t_node.filename, sep="")
+        _prefix += "   " if _last else "|  "
+        child_count = len(t_node.dir_table.table.keys())
+        for i, child in enumerate(t_node.dir_table.table.keys()):
+            _last = i == (child_count - 1)
+            t_child_node_number = t_node.dir_table.table[child]
+            self.render(t_child_node_number, _prefix, _last, level+1)
+
+    def tree_2_json(self):
+        map = {}
+        for elem, level, t_n, p_n in co2.system_calls.IOSystemCalls.super_table['ram0']._traverse_tree(0, -1):
+            if t_n not in map:
+                map[t_n] = {"f": elem.filename, "c": [], "l":level}
+            if p_n != -1:
+                map[p_n]['c'].append(t_n)
+        return map
+
+    def _traverse_tree(self, t_node_number : int, p_t_node_number : int, level : int = 0, s_dev : str = "ram0"):
+        current_superblock = co2.system_calls.IOSystemCalls.super_table[s_dev].superblock
+        t_node = current_superblock.vector.get_entry(t_node_number)
+        print(t_node.filename)
+        yield t_node, level, t_node_number, p_t_node_number
+        level += 1
+        for filename, next_t_node_number in t_node.dir_table.table.items():
+            next_t_node = current_superblock.vector.get_entry(next_t_node_number)
+            if  next_t_node.is_mount_point:
+                t_node_mount_point = current_superblock.vector.get_entry(next_t_node_number)
+                s_dev = next_t_node.s_dev
+                mount_t_node_number = 0
+                yield from self._traverse_tree(mount_t_node_number,
+                                               t_node_number, level, s_dev)
+            yield from self._traverse_tree(next_t_node_number, t_node_number, level, s_dev)
+
+
+
     def _traverse_path(self, path_tokens             : list,
                              level                   : int,
                              t_node_number           : int,
