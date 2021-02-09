@@ -158,7 +158,7 @@ class Fs:
             else:
                 print(_prefix, "+- " if _last else "|- ", t_node.filename, sep="")
             s_dev=t_node.s_dev
-            self.render(0, _prefix, False, level+1, s_dev)
+            self.render(0, _prefix, _last, level+1, s_dev)
         else:
             if level==0:
                 print("   " + t_node.filename)
