@@ -147,19 +147,30 @@ class Fs:
             HandlersTypes.UMOUNT_A_NODE: HandlersFunctions.umount_a_node,
         }
 
-    def render(self, t_node_number, _prefix="", _last=True, level=0):
-        current_superblock = co2.system_calls.IOSystemCalls.super_table["ram0"].superblock
+    def render(self, t_node_number, _prefix="", _last=True, level=0,
+               s_dev="ram0"):
+        current_superblock = co2.system_calls.IOSystemCalls.super_table[s_dev].superblock
         t_node = current_superblock.vector.get_entry(t_node_number)
-        if level==0:
-            print("   " + t_node.filename)
+
+        if t_node.is_mount_point:
+            if level==0:
+                print("   " + t_node.filename)
+            else:
+                print(_prefix, "+- " if _last else "|- ", t_node.filename, sep="")
+            s_dev=t_node.s_dev
+            self.render(0, _prefix, False, level+1, s_dev)
         else:
-            print(_prefix, "+- " if _last else "|- ", t_node.filename, sep="")
+            if level==0:
+                print("   " + t_node.filename)
+            else:
+                if t_node.filename != "/":
+                    print(_prefix, "+- " if _last else "|- ", t_node.filename, sep="")
         _prefix += "   " if _last else "|  "
         child_count = len(t_node.dir_table.table.keys())
         for i, child in enumerate(t_node.dir_table.table.keys()):
             _last = i == (child_count - 1)
             t_child_node_number = t_node.dir_table.table[child]
-            self.render(t_child_node_number, _prefix, _last, level+1)
+            self.render(t_child_node_number, _prefix, _last, level+1, s_dev)
 
     def tree_2_json(self):
         map = {}
