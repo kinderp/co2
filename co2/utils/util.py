@@ -1,5 +1,20 @@
 import argparse
 
+from io import StringIO 
+import sys
+
+
+class Capturing(list):
+    def __enter__(self):
+        self._stdout = sys.stdout
+        sys.stdout = self._stringio = StringIO()
+        return self
+    def __exit__(self, *args):
+        self.extend(self._stringio.getvalue().splitlines())
+        del self._stringio    # free up some memory
+        sys.stdout = self._stdout
+
+
 class CLIParser:
 
     argparser = None
@@ -29,6 +44,9 @@ class CLIParser:
 
         argsp = cls.argsubparsers.add_parser("umount", help="Unount a device")
         argsp.add_argument("abs_filename", help="Unmount a device", type=str)
+
+        argsp = cls.argsubparsers.add_parser("tree", help="print filesystem tree")
+
 
     @classmethod
     def parse(cls, argv):
