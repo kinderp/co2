@@ -13,6 +13,7 @@ class CO2Messages:
     CO2_RM      = 1001
     CO2_MKDIR   = 1002
     CO2_RMDIR   = 1003
+    CO2_TREE    = 1004
 
     @classmethod
     def _to_dict(cls):
