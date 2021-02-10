@@ -4,6 +4,7 @@ from co2.core.fs import TNode
 from co2.core.fs import Types as FilesTypes
 from co2.core.fs import OFlags
 from co2.core.fs import Fs
+from co2.utils.util import Capturing
 
 
 class IOSystemCalls:
@@ -49,6 +50,12 @@ class IOSystemCalls:
             cls.mkdir("/dev", dev_t='ram0')
             #cls.mknod("/dev/hda", 1, 2, dev_t='ram0')
             #cls.mknod("/dev/console", 3, 4, dev_t='ram0')
+
+    @classmethod
+    def tree(cls):
+        with Capturing() as output:
+            cls.super_table["ram0"].render(0, s_dev="ram0")
+        return output
 
     @classmethod
     def open(cls, abs_filename : str, oflags : OFlags = OFlags.O_CREAT | OFlags.O_WRONLY, dev_t : str = 'ram0'):
