@@ -22,6 +22,7 @@ class Client:
             response = self.sock.recv(1024)
             print('Received response: {}'.format(response.decode('utf-8',
                                                                errors='replace')))
+            return response
         finally:
             print('closing socket')
             self.sock.close()
