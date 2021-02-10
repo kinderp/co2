@@ -4,6 +4,8 @@ from .message_touch import MessageTouch
 from .message_rm import MessageRm
 from .message_mkdir import MessageMkdir
 from .message_rmdir import MessageRmdir
+from .message_tree import MessageTree
+
 
 class MessagesFactory:
     factory = {
@@ -13,6 +15,7 @@ class MessagesFactory:
         CO2Messages.CO2_RM      : MessageRm,
         CO2Messages.CO2_MKDIR   : MessageRmdir,
         CO2Messages.CO2_RMDIR   : MessageRmdir,
+        CO2Messages.CO2_TREE    : MessageTree,
     }
 
     @classmethod
