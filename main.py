@@ -13,7 +13,5 @@ from co2.utils import CLIParser
 
 if __name__ == "__main__":
     CLIParser.init()
-    import pdb
-    pdb.set_trace()
     args = CLIParser.parse(sys.argv[1:])
     CommandsFactory.create(args.command).execute(args)
