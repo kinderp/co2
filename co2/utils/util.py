@@ -47,6 +47,11 @@ class CLIParser:
 
         argsp = cls.argsubparsers.add_parser("tree", help="print filesystem tree")
 
+        argsp = cls.argsubparsers.add_parser("insmod", help="Load a module driver for a device")
+        argsp.add_argument("s_dev", help="", type=str)
+        argsp.add_argument("module", help="", type=str)
+
+
 
     @classmethod
     def parse(cls, argv):
