@@ -36,9 +36,11 @@ class DMap:
             class_ = getattr(module, class_name)
             self.dmap[major][1] = class_()
             return True
+        return False
 
-    def unload_item(self, s_dev, abs_path):
+    def unload_item(self, s_dev):
         major = DEVICE_MAPPING.get(s_dev)
         if major:
             self.dmap[major][1] = None
             return True
+        return False

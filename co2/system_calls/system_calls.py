@@ -12,11 +12,12 @@ class DriverSystemCalls:
     dmap = DMap()
 
     @classmethod
-    def insmod(self):
-        pass
+    def insmod(cls, s_dev : str, driver : str) -> bool:
+        return cls.dmap.load_item(s_dev, driver)
 
-    def rmmod(self):
-        pass
+    @classmethod
+    def rmmod(cls, s_dev : str) -> bool:
+        return cls.dmap.unload_item(s_dev)
 
 
 class IOSystemCalls:
