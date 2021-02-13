@@ -12,8 +12,8 @@ class DriverSystemCalls:
     dmap = DMap()
 
     @classmethod
-    def insmod(cls, s_dev : str, driver : str) -> bool:
-        return cls.dmap.load_item(s_dev, driver)
+    def insmod(cls, s_dev : str, module : str) -> bool:
+        return cls.dmap.load_item(s_dev, module)
 
     @classmethod
     def rmmod(cls, s_dev : str) -> bool:
