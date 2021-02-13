@@ -6,6 +6,18 @@ from co2.core.fs import OFlags
 from co2.core.fs import Fs
 from co2.utils.util import Capturing
 
+from co2.core.fs import DMap
+
+class DriverSystemCalls:
+    dmap = DMap()
+
+    @classmethod
+    def insmod(self):
+        pass
+
+    def rmmod(self):
+        pass
+
 
 class IOSystemCalls:
     Path(".co2/objects").mkdir(parents=True, exist_ok=True)
