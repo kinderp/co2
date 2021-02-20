@@ -26,6 +26,10 @@ class CLIParser:
         cls.argsubparsers = cls.argparser.add_subparsers(title="Commands", dest="command")
         cls.argsubparsers.required = True
 
+        # PS SERVER COMMANDS
+        argsp = cls.argsubparsers.add_parser("boot", help="Boot CO2 System")
+
+        # IO SERVER COMMANDS
         argsp = cls.argsubparsers.add_parser("touch", help="Create a new file")
         argsp.add_argument("abs_filename", help="Create a file", type=str)
 

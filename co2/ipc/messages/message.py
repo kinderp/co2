@@ -4,6 +4,9 @@ class CO2Messages:
     CO2_INIT    = 1
     CO2_COMMIT  = 2
     CO2_BUILD   = 3
+    ####################
+    #    IO Messages   #
+    ####################
     CO2_INSMOD  = 4
     CO2_RMOD    = 5
     CO2_MKNOD   = 6
@@ -14,6 +17,10 @@ class CO2Messages:
     CO2_MKDIR   = 1002
     CO2_RMDIR   = 1003
     CO2_TREE    = 1004
+    ####################
+    #    PS Messages   #
+    ####################
+    CO2_BOOT    = 10000
 
     @classmethod
     def _to_dict(cls):
