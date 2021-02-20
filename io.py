@@ -1,4 +1,4 @@
 from co2.ipc import IO
 
-io = IO()
+io = IO('/tmp/uds_socket')
 io.start()
