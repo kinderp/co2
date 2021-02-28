@@ -1,20 +1,17 @@
-from anytree import NodeMixin, RenderTree
-
-class Block(NodeMixin):
-    def __init__(self, name, parent=None, children=None):
-        self.__name = name
-        self.parent = parent
-        if children:
-            self.children = children
+class Block:
+    def __init__(self, type : str = None, data : object = None):
+        self.__type = type
+        self.__data = data
 
     @property
-    def name(self):
-        return self.__name
+    def data(self):
+        return self.__data
 
-    @name.setter
-    def name(self, name):
-        self.__name = name
+    @data.setter
+    def data(self, data: object):
+        self.__data = data
 
-    def render(self):
-        for pre, fill, node in RenderTree(self):
-            print("{}{}".format(pre, node.name))
+    @property
+    def type(self):
+        return self.__type
+
