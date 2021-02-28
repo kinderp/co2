@@ -17,12 +17,21 @@ class TNode:
         self.__type = type
         self.__is_mpoint = False
         self.__s_dev = None
+        self.__count = 1
     #def __repr__(self):
     #    print("filename={}".format(filename))
     #    print("type={}".format(self.__type))
     #    print("major_number={} minor_number={}".format(self.__major_number,self.__minor_number))
     #    print("block={}".format(self.__block_address))
     #    print("dir_table={}".format(self.__dir_table))
+
+    @property
+    def count(self) -> int:
+        return self.__count
+
+    @count.setter
+    def count(self, count):
+        self.__count = count
 
     @property
     def s_dev(self) -> str:
