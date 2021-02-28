@@ -1,10 +1,10 @@
 import shelve
 
 import co2
-from co2.core.fs import Superblock
-from co2.core.fs import TNode
-from co2.core.fs import Block
-from co2.core.fs import Types
+from co2.core.fs.superblock import Superblock
+from co2.core.fs.t_node import TNode
+from co2.core.fs.block import Block
+from co2.core.fs.types import Types
 
 
 class OFlags:
@@ -34,65 +34,93 @@ class HandlersFunctions:
         @staticmethod
         def add_a_node(case : int, filename : str,
                        t_node : TNode, type : Types, major : int=-1, minor :
-                       int=-1, s_dev : str = 'ram0'):
+                       int=-1, s_dev : str = 'ram0') -> int:
             if case == TraverseCases.CASE_1:
-                return False
+                # CASE_1: found a leaf.
+                #         already existing mnode
+                return -1
             elif case == TraverseCases.CASE_2:
+                # CASE_2: not found a leaf
+                #         not existing node
                 superblock = co2.system_calls.IOSystemCalls.super_table[s_dev].superblock
+                file_table = co2.system_calls.IOSystemCalls.file_table
+                # 1. get a new tnode number
+                #    it'll be the index of the new TNode
+                #    in the vector table (superblok.vector)
                 free_t_node_number = superblock.reserve_t_node_number()
+                # 2. Add a new entry in the vector table
+                #
+                #    SUPERBLOCK.VECTOR:
+                #
+                #    +--------------+-------+
+                #    |     ...      |  ...  |
+                #    +--------------+-------+
+                #    | t_node_number| TNode |
+                #    +--------------+-------+
+                #
+                # Note: t_node as input parameter is the TNode
+                #       of the father of the new node
                 superblock.vector.add_entry(
                     vector_entry_index = free_t_node_number,
                     vector_entry       = TNode(
                                                 filename=filename,
-                                                block=Block(
-                                                    name=filename,
-                                                    parent=t_node.block,
-                                                ),
+                                                block=Block(),
                                                 type = type,
                                                 major=major,
                                                 minor=minor,
                                          )
                 )
+                # 3. Add a new entry in the dir_table of the tnode
+                # of the father
                 t_node.add_dir_entry(free_t_node_number, filename)
-                return True
+                # 4. Add a new entry in the file table
+                file_table_number = file_table.add_entry(free_t_node_number, s_dev)
+                #return True
+                return file_table_number
             elif case == TraverseCases.CASE_3:
-                return False
+                # CASE_3: Not found path
+                return -1
             else:
                 # Not supported cases
-                return False
+                return -1
 
         @staticmethod
-        def del_a_ndoe(case : int, filename : str, t_node : TNode,
-                       t_node_number : int, s_dev : str = 'ram0'):
+        def del_a_node(case : int, filename : str, t_node : TNode,
+                       t_node_number : int, s_dev : str = 'ram0') -> int:
             if case == TraverseCases.CASE_1:
                 superblock = co2.system_calls.IOSystemCalls.super_table[s_dev].superblock
                 superblock.release_t_node_number(t_node_number)
                 superblock.vector.rem_entry(t_node_number)
-                old_children = list(t_node.block.children) # children it's a tuple :(
-                for index, children in enumerate(old_children):
-                    if children.name == filename:
-                        old_children.pop(index)
-                t_node.block.children = old_children
-                return True
+                return 1
             elif case == TraverseCases.CASE_2:
-                return False
+                return -1
             elif case == TraverseCases.CASE_3:
-                return False
+                return -1
             else:
                 # Not supported cases
-                return False
+                return -1
 
         @staticmethod
-        def open_a_node(case : int):
+        def open_a_node(case : int, t_node_number : int, s_dev : str = "ram0") -> int:
             if case == TraverseCases.CASE_1:
-                return True
+                superblock = co2.system_calls.IOSystemCalls.super_table[s_dev].superblock
+                t_node = superblock.vector.get_entry(t_node_number)
+                # CASE_1: found a leaf.
+                file_table = co2.system_calls.IOSystemCalls.file_table
+                # Add a new entry in the file table
+                file_table_number = file_table.add_entry(t_node_number)
+                # Add TNode.count (a new fd point to this t_node)
+                t_node.count += 1
+                return file_table_number
             elif case == TraverseCases.CASE_2:
-                return False
+                # CASE_2_ not found a leaf
+                return -1
             elif case == TraverseCases.CASE_3:
-                return False
+                # CASE_3: Not found path
+                return -1
             else:
                 # Not supported cases
-                return False
+                return -1
 
         @staticmethod
         def mount_a_node(case : int, t_node : TNode, s_dev : str = 'ram0'):
@@ -141,7 +169,7 @@ class Fs:
 
         self.handlers = {
             HandlersTypes.ADD_A_NODE   : HandlersFunctions.add_a_node,
-            HandlersTypes.DEL_A_NODE   : HandlersFunctions.del_a_ndoe,
+            HandlersTypes.DEL_A_NODE   : HandlersFunctions.del_a_node,
             HandlersTypes.OPEN_A_NODE  : HandlersFunctions.open_a_node,
             HandlersTypes.MOUNT_A_NODE : HandlersFunctions.mount_a_node,
             HandlersTypes.UMOUNT_A_NODE: HandlersFunctions.umount_a_node,
@@ -312,6 +340,8 @@ class Fs:
                 handler_function_kwargs.update({"s_dev" : s_dev} )
                 return self.handlers[handler_type](TraverseCases.CASE_1, **handler_function_kwargs)
             elif handler_type == HandlersTypes.OPEN_A_NODE:
+                handler_function_kwargs.update({"s_dev"         : s_dev        })
+                handler_function_kwargs.update({"t_node_number" : next_t_node_number})
                 return self.handlers[handler_type](TraverseCases.CASE_1, **handler_function_kwargs)
             elif handler_type == HandlersTypes.DEL_A_NODE:
                 handler_function_kwargs.update({"s_dev" : s_dev} )
@@ -344,6 +374,8 @@ class Fs:
                 handler_function_kwargs.update({"t_node"  : t_node}         )
                 return self.handlers[handler_type](TraverseCases.CASE_2, **handler_function_kwargs)
             elif handler_type == HandlersTypes.OPEN_A_NODE:
+                handler_function_kwargs.update({"s_dev"         : s_dev        })
+                handler_function_kwargs.update({"t_node_number" : t_node_number})
                 return self.handlers[handler_type](TraverseCases.CASE_2, **handler_function_kwargs)
             elif handler_type == HandlersTypes.DEL_A_NODE:
                 handler_function_kwargs.update({"s_dev" : s_dev} )
@@ -373,6 +405,7 @@ class Fs:
                                        handler_function_kwargs, s_dev)
 
     def _new_node(self, filename : str, type : Types, major : int=-1, minor : int=-1):
+        filename = self._build_abs_path(filename)
         path_tokens = filename.split("/")[1:]
         return self._traverse_path(path_tokens, 0, 0,
                                    HandlersTypes.ADD_A_NODE,
@@ -385,12 +418,20 @@ class Fs:
                                    },
                                   )
 
+    def _build_abs_path(self, filename : str) -> str:
+        if filename.startswith("/"):
+            return filename
+        else:
+            return co2.system_calls.ProcessSystemCalls.C_TASK.PWD + filename
+
     def _eat_path(self, filename : str):
+        filename = self._build_abs_path(filename)
         path_tokens = filename.split("/")[1:]
         return self._traverse_path(path_tokens, 0, 0,
                                    HandlersTypes.OPEN_A_NODE, {})
 
     def _del_node(self, filename : str):
+        filename = self._build_abs_path(filename)
         path_tokens = filename.split("/")[1:]
         return self._traverse_path(path_tokens, 0, 0,
                                    HandlersTypes.DEL_A_NODE,
@@ -402,11 +443,13 @@ class Fs:
                                   )
 
     def _mount_node(self, dev_t : str, mount_point : str):
+        mount_point = self._build_abs_path(mount_point)
         path_tokens = mount_point.split("/")[1:]
         return self._traverse_path(path_tokens, 0, 0,
                                    HandlersTypes.MOUNT_A_NODE, {"s_dev": dev_t})
 
     def _umount_node(self, dev_t : str, mount_point : str):
+        mount_point = self._build_abs_path(mount_point)
         path_tokens = mount_point.split("/")[1:]
         return self._traverse_path(path_tokens, 0, 0,
                                    HandlersTypes.UMOUNT_A_NODE, {"s_dev": dev_t})
@@ -450,3 +493,6 @@ class Fs:
         if block_device_exist:
             return self._umount_node(dev_t, m_point)
         return False
+
+    def do_chdir(self, pathname : str):
+        co2.system_calls.ProcessSystemCalls.C_TASK.PWD = None
