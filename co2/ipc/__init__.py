@@ -1,3 +1,2 @@
 from .client import Client
-from .server import IO
-from .server import PS
+from .server import Server

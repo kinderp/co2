@@ -6,7 +6,7 @@ import json
 
 from co2.core.interfaces.kernel import _SYSCALL
 
-class SERVER:
+class Server:
     def __init__(self, socket_address: str = '/tmp/uds_socket'):
         self.server_address = socket_address
         # Make sure the socket does not already exist. try:
@@ -55,11 +55,3 @@ class SERVER:
                     # Clean up the connection.
                     connection.close()
 
-class IO(SERVER):
-    def __init__(self, socket_address : str):
-       super().__init__(socket_address)
-
-
-class PS(SERVER):
-    def __init__(self, socket_address : str):
-       super().__init__(socket_address)
