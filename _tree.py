@@ -1,6 +1,4 @@
 from co2.system_calls import IOSystemCalls
-import pdb
-pdb.set_trace()
 IOSystemCalls.mkdir("/dev")
 IOSystemCalls.mknod("/dev/hda", 1, 1)
 IOSystemCalls.mknod("/dev/hdb", 2, 2)

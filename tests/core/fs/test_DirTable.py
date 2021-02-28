@@ -1,5 +1,5 @@
 import pytest
-from co2.core.fs import  DirTable
+from co2.core.fs.dir_table import  DirTable
 
 class TestClassDirTable:
     @pytest.fixture

@@ -1,5 +1,5 @@
 import pytest
-from co2.core.fs import TNodesBitmap
+from co2.core.fs.t_nodes_bitmap import TNodesBitmap
 
 class TestClassTNodesBitmap:
     @pytest.yield_fixture

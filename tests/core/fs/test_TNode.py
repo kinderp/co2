@@ -1,16 +1,14 @@
 import pytest
-from co2.core.fs import TNode
-from co2.core.fs import Block
+from co2.core.fs.fs import TNode
+from co2.core.fs.fs import Block
 
 class TestClassTNode:
     @pytest.fixture
     def instance(self):
         filename = "Francesco"
-        children = [Block("Giuseppe"), Block("Antonio"), Block("Teresa")]
-        parent   = Block("Peppino")
         t_node   =  TNode(
             filename = filename,
-            block    = Block(filename, parent, children),
+            block    = Block(),
         )
         yield t_node
         # teardown test_add_dir_entry

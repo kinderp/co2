@@ -1,7 +1,7 @@
 import pytest
-from co2.core.fs import TNodesVector
-from co2.core.fs import TNode
-from co2.core.fs import Block
+from co2.core.fs.t_nodes_vector import TNodesVector
+from co2.core.fs.t_node import TNode
+from co2.core.fs.block import Block
 
 class TestClassTNodesVector:
     @pytest.yield_fixture
@@ -17,9 +17,7 @@ class TestClassTNodesVector:
         # nothing to do
 
     def test_add_entry(self, instance):
-        children = [Block("Giuseppe"), Block("Antonio"), Block("Teresa")]
-        parent   = Block("Peppino")
-        block    = Block("Francesco", parent, children)
+        block    = Block()
         t_n = TNode("Francesco", block)
         instance.add_entry(t_n, 1)
 

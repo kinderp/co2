@@ -2,8 +2,6 @@ from co2.system_calls import ProcessSystemCalls
 from co2.system_calls import IOSystemCalls
 from co2.core.fs.fs import OFlags
 
-import ipdb
-ipdb.set_trace()
 
 ProcessSystemCalls.boot()
 assert IOSystemCalls.open('/file', OFlags.O_RDONLY) < 0 # file does not exist, error
@@ -52,8 +50,6 @@ assert IOSystemCalls.open('/mnt/hda/test/1', OFlags.O_CREAT | OFlags.O_WRONLY) >
 assert IOSystemCalls.open('/mnt/hda/test/2', OFlags.O_CREAT | OFlags.O_WRONLY) > 0
 assert IOSystemCalls.mkdir('/mnt/hda/test2') > 0
 assert IOSystemCalls.open('/mnt/hda/test2/1', OFlags.O_CREAT | OFlags.O_WRONLY) > 0
-import pdb
-pdb.set_trace()
 assert IOSystemCalls.open('/mnt/hda/test2/2', OFlags.O_CREAT | OFlags.O_WRONLY) > 0
 assert IOSystemCalls.open('/mnt/hda/test2/3', OFlags.O_CREAT | OFlags.O_WRONLY) > 0
 assert IOSystemCalls.open('/mnt/hda/test2/4', OFlags.O_CREAT | OFlags.O_WRONLY) > 0

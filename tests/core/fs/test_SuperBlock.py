@@ -1,5 +1,5 @@
 import pytest
-from co2.core.fs import Superblock
+from co2.core.fs.fs import Superblock
 
 class TestClassSuperblock:
     @pytest.fixture
