@@ -5,7 +5,7 @@ from .types import Types
 class TNodesVector:
     def __init__(self):
         self.vector = {
-                0: TNode(filename="/", block=Block(name="/", children=[]), type=Types.DIRECTORY)
+                0: TNode(filename="/", block=Block(), type=Types.DIRECTORY)
         }
 
     def add_entry(self, vector_entry : TNode, vector_entry_index : int):
