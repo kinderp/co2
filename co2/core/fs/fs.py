@@ -407,8 +407,28 @@ class Fs:
             # DEL_A_NODE    : Path does not exist     KO
             # MOUNT_A_NODE  : fiel does not exist     KO
             # UMOUNT_A_NODE : fiel does not exist     KO
-            handler_function_kwargs.update({"s_dev" : s_dev} )
-            return self.handlers[handler_type](TraverseCases.CASE_3, **handler_function_kwargs)
+            if handler_type == HandlersTypes.ADD_A_NODE:
+                handler_function_kwargs.update({"s_dev"        : s_dev})
+                handler_function_kwargs.update({"filename"     : None })
+                handler_function_kwargs.update({"t_node"       : None })
+                handler_function_kwargs.update({"t_node_number": None })
+                return self.handlers[handler_type](TraverseCases.CASE_3, **handler_function_kwargs)
+            elif handler_type == HandlersTypes.OPEN_A_NODE:
+                handler_function_kwargs.update({"s_dev"         : s_dev })
+                handler_function_kwargs.update({"t_node_number" : None  })
+                return self.handlers[handler_type](TraverseCases.CASE_3, **handler_function_kwargs)
+            elif handler_type == HandlersTypes.DEL_A_NODE:
+                handler_function_kwargs.update({"s_dev" : s_dev} )
+                return self.handlers[handler_type](TraverseCases.CASE_3, **handler_function_kwargs)
+            elif handler_type == HandlersTypes.MOUNT_A_NODE:
+                return self.handlers[handler_type](TraverseCases.CASE_3, **handler_function_kwargs)
+            elif handler_type == HandlersTypes.UMOUNT_A_NODE:
+                handler_function_kwargs.update({"t_node_number": None})
+                handler_function_kwargs.update({"t_node"       : None })
+                return self.handlers[handler_type](TraverseCases.CASE_3, **handler_function_kwargs)
+            else:
+                return -1
+
         else:
             return self._traverse_path(path_tokens, level + 1,
                                        next_t_node_number, handler_type,
