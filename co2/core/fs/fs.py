@@ -33,7 +33,7 @@ class HandlersTypes:
 class HandlersFunctions:
         @staticmethod
         def add_a_node(case : int, filename : str,
-                       t_node : TNode, type : Types, major : int=-1, minor :
+                       t_node : TNode, t_node_number : int, type : Types, major : int=-1, minor :
                        int=-1, s_dev : str = 'ram0') -> int:
             if case == TraverseCases.CASE_1:
                 # CASE_1: found a leaf.
@@ -70,6 +70,15 @@ class HandlersFunctions:
                                                 minor=minor,
                                          )
                 )
+                # each dir_table for a TNode has 2 reserved entries
+                # . : t_node_number of the curent dir 
+                # ..: t_node_number of the father of the current dir
+                #
+                # we need to add those 2 entries in current tnode dir_table
+                node_dir_table = superblock.vector.get_entry(free_t_node_number).dir_table
+                node_dir_table._add(free_t_node_number, ".")
+                node_dir_table._add(t_node_number, "..")
+
                 # 3. Add a new entry in the dir_table of the tnode
                 # of the father
                 t_node.add_dir_entry(free_t_node_number, filename)
@@ -312,7 +321,7 @@ class Fs:
         next_t_node_number = t_node.dir_table._get(current_branch)
         next_t_node = current_superblock.vector.get_entry(next_t_node_number)
 
-        if  next_t_node_number and next_t_node.is_mount_point:
+        if  next_t_node_number is not None and next_t_node.is_mount_point:
             if handler_type == HandlersTypes.UMOUNT_A_NODE and next_t_node.s_dev == handler_function_kwargs['s_dev']:
                 t_node_mount_point = current_superblock.vector.get_entry(next_t_node_number)
                 handler_function_kwargs.update({"t_node" : t_node_mount_point})
@@ -328,7 +337,7 @@ class Fs:
                                        handler_function_kwargs,
                                        s_dev
             ) 
-        if next_t_node_number and (level + 1 ) == len(path_tokens):
+        if next_t_node_number is not None  and (level + 1 ) == len(path_tokens):
             # Case#1: Found a leaf
             #
             # ADD_A_NODE    : File already exist  KO
@@ -360,7 +369,7 @@ class Fs:
                 return self.handlers[handler_type](TraverseCases.CASE_1, **handler_function_kwargs)
             else:
                 pass
-        elif not next_t_node_number and (level + 1) == len(path_tokens):
+        elif next_t_node_number is None and (level + 1) == len(path_tokens):
             # Case#2: Not found a leaf
             #
             # ADD_A_NODE    : does not exist a file with the same name OK
@@ -369,9 +378,10 @@ class Fs:
             # MOUNT_A_NODE  : fiel does not exist                      KO
             # UMOUNT_A_NODE : fiel does not exist                      KO
             if handler_type == HandlersTypes.ADD_A_NODE:
-                handler_function_kwargs.update({"s_dev" : s_dev} )
-                handler_function_kwargs.update({"filename": current_branch} )
-                handler_function_kwargs.update({"t_node"  : t_node}         )
+                handler_function_kwargs.update({"s_dev"        : s_dev          })
+                handler_function_kwargs.update({"filename"     : current_branch })
+                handler_function_kwargs.update({"t_node"       : t_node         })
+                handler_function_kwargs.update({"t_node_number": t_node_number  })
                 return self.handlers[handler_type](TraverseCases.CASE_2, **handler_function_kwargs)
             elif handler_type == HandlersTypes.OPEN_A_NODE:
                 handler_function_kwargs.update({"s_dev"         : s_dev        })
@@ -389,7 +399,7 @@ class Fs:
                                                   TraverseCases.CASE_2, **handler_function_kwargs)
             else:
                 pass
-        elif not next_t_node_number and (level + 1) < len(path_tokens):
+        elif next_t_node_number is None and (level + 1) < len(path_tokens):
             # Case#3: Not found path
             #
             # ADD_A_NODE    : Path does not exist     KO
@@ -405,7 +415,8 @@ class Fs:
                                        handler_function_kwargs, s_dev)
 
     def _new_node(self, filename : str, type : Types, major : int=-1, minor : int=-1):
-        filename = self._build_abs_path(filename)
+        #filename = self._build_abs_path(filename)
+        filename = co2.system_calls.ProcessSystemCalls._build_abs_path(filename)
         path_tokens = filename.split("/")[1:]
         return self._traverse_path(path_tokens, 0, 0,
                                    HandlersTypes.ADD_A_NODE,
@@ -417,21 +428,24 @@ class Fs:
                                         "minor"    : minor,
                                    },
                                   )
-
+    """
     def _build_abs_path(self, filename : str) -> str:
         if filename.startswith("/"):
             return filename
         else:
             return co2.system_calls.ProcessSystemCalls.C_TASK.PWD + filename
+    """
 
     def _eat_path(self, filename : str):
-        filename = self._build_abs_path(filename)
+        #filename = self._build_abs_path(filename)
+        filename = co2.system_calls.ProcessSystemCalls._build_abs_path(filename)
         path_tokens = filename.split("/")[1:]
         return self._traverse_path(path_tokens, 0, 0,
                                    HandlersTypes.OPEN_A_NODE, {})
 
     def _del_node(self, filename : str):
-        filename = self._build_abs_path(filename)
+        #filename = self._build_abs_path(filename)
+        filename = co2.system_calls.ProcessSystemCalls._build_abs_path(filename)
         path_tokens = filename.split("/")[1:]
         return self._traverse_path(path_tokens, 0, 0,
                                    HandlersTypes.DEL_A_NODE,
@@ -443,13 +457,15 @@ class Fs:
                                   )
 
     def _mount_node(self, dev_t : str, mount_point : str):
-        mount_point = self._build_abs_path(mount_point)
+        #mount_point = self._build_abs_path(mount_point)
+        mount_point = co2.system_calls.ProcessSystemCalls._build_abs_path(mount_point)
         path_tokens = mount_point.split("/")[1:]
         return self._traverse_path(path_tokens, 0, 0,
                                    HandlersTypes.MOUNT_A_NODE, {"s_dev": dev_t})
 
     def _umount_node(self, dev_t : str, mount_point : str):
-        mount_point = self._build_abs_path(mount_point)
+        #mount_point = self._build_abs_path(mount_point)
+        mount_point = co2.system_calls.ProcessSystemCalls._build_abs_path(mount_point)
         path_tokens = mount_point.split("/")[1:]
         return self._traverse_path(path_tokens, 0, 0,
                                    HandlersTypes.UMOUNT_A_NODE, {"s_dev": dev_t})

@@ -36,8 +36,8 @@ class ProcessSystemCalls:
         cls.C_TASK = swapper
         # create root fs
         IOSystemCalls.init()
-        file_table_number = IOSystemCalls.mkdir('/')
-        fd = cls.C_TASK.FDTABLE.add(file_table_number)
+        #file_table_number = IOSystemCalls.mkdir('/')
+        #fd = cls.C_TASK.FDTABLE.add(file_table_number)
 
         file_table_number = IOSystemCalls.mkdir('/bin')
         fd = cls.C_TASK.FDTABLE.add(file_table_number)
@@ -86,6 +86,26 @@ class ProcessSystemCalls:
             mapped = json.loads(abs_filename)
         except Exception as e:
             return -1
+
+    @classmethod
+    def _build_abs_path(cls, filename : str) -> str:
+        def get_template():
+            if cls.C_TASK.PWD.endswith("/"):
+                pwd_template = "{}{}"
+            else:
+                pwd_template = "{}/{}"
+            return pwd_template
+
+        if filename.startswith(".."):
+            pwd_template = get_template()
+            return pwd_template.format(cls.C_TASK.PWD, filename)
+
+        if filename.startswith("/"):
+            return filename
+        else:
+            pwd_template = get_template()
+            return pwd_template.format(cls.C_TASK.PWD, filename)
+
 
 
 class DriverSystemCalls:
@@ -216,5 +236,9 @@ class IOSystemCalls:
 
     @classmethod
     def chdir(cls, pathname : str):
-
-        ProcessSystemCalls.C_TASK.PWD = ""
+        try:
+            pathname = ProcessSystemCalls._build_abs_path(pathname)
+            ProcessSystemCalls.C_TASK.PWD = pathname
+            return 1
+        except Exception as e:
+            return -1
