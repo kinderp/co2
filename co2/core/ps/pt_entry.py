@@ -30,7 +30,7 @@ class FDTable:
     def __init__(self):
         self.bitmap = FDBitmap()
         self.table = {}
- 
+
     def get(self, fd : int):
         return self.table[fd]
 
@@ -61,7 +61,7 @@ class PTEntry:
         self.PID = None
         self.PPID = None
         self.FDTABLE = FDTable()
-        self.PWD = None
+        self.__PWD = None
         """
         self.FDS = {
 
@@ -70,6 +70,25 @@ class PTEntry:
             2: None,
         }
         """
+
+    @property
+    def PWD(self):
+        return self.__PWD
+
+    @PWD.setter
+    def PWD(self, PWD):
+        splitted_pwd = PWD.split("/")
+        path = []
+        for elem in splitted_pwd:
+            if elem == "..":
+                path.pop()
+            elif elem == ".":
+                continue
+            else:
+                path.append(elem)
+        pwd = '/'.join(path)
+        self.__PWD = pwd if pwd else "/"
+
 
 
 
