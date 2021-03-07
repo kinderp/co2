@@ -207,6 +207,7 @@ class Fs:
         _prefix += "   " if _last else "|  "
         child_count = len(t_node.dir_table.table.keys())
         for i, child in enumerate(t_node.dir_table.table.keys()):
+            if child == "." or child == "..": continue
             _last = i == (child_count - 1)
             t_child_node_number = t_node.dir_table.table[child]
             self.render(t_child_node_number, _prefix, _last, level+1, s_dev)
