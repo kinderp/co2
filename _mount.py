@@ -2,7 +2,8 @@ from co2.system_calls import ProcessSystemCalls
 from co2.system_calls import IOSystemCalls
 from co2.core.fs.fs import OFlags
 
-
+import ipdb
+ipdb.set_trace()
 ProcessSystemCalls.boot()
 assert IOSystemCalls.open('/file', OFlags.O_RDONLY) < 0 # file does not exist, error
 assert IOSystemCalls.open('/file', OFlags.O_CREAT | OFlags.O_WRONLY) > 0
@@ -16,6 +17,25 @@ assert IOSystemCalls.open('/etc/resolv.conf', OFlags.O_CREAT | OFlags.O_WRONLY) 
 assert IOSystemCalls.mkdir('/usr') > 0
 assert IOSystemCalls.mkdir('/usr/local') > 0
 
+# change dir
+assert IOSystemCalls.chdir("/usr/local") > 0
+# create a bin dir in current dir (/usr/local)
+assert IOSystemCalls.mkdir("bin") > 0
+
+assert IOSystemCalls.open('bin/file_in_usr_local_bin_1', OFlags.O_CREAT | OFlags.O_WRONLY) > 0
+assert IOSystemCalls.open('/usr/local/bin/file_in_usr_local_bin_2', OFlags.O_CREAT | OFlags.O_WRONLY) > 0
+
+assert IOSystemCalls.open('bin/file_in_usr_local_bin_2', OFlags.O_RDONLY) > 0
+assert IOSystemCalls.open('/usr/local/bin/file_in_usr_local_bin_1', OFlags.O_RDONLY) > 0
+
+
+assert IOSystemCalls.chdir("..") > 0
+assert IOSystemCalls.chdir("..") > 0
+import pdb
+pdb.set_trace()
+assert IOSystemCalls.open("/usr/local/../..", OFlags.O_RDONLY) > 0
+
+assert IOSystemCalls.chdir("/usr/local") > 0
 # /bin is created in boot()
 #assert IOSystemCalls.mkdir('/bin') > 0
 
