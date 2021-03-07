@@ -7,6 +7,8 @@ from .message_mkdir import MessageMkdir
 from .message_rmdir import MessageRmdir
 from .message_tree import MessageTree
 from .message_insmod import MessageInsmod
+from .message_cd import MessageCd
+from .message_pwd import MessagePwd
 # PS Mesagess
 from .message_boot import MessageBoot
 
@@ -23,6 +25,8 @@ class MessagesFactory:
         CO2Messages.CO2_RMDIR   : MessageRmdir,
         CO2Messages.CO2_TREE    : MessageTree,
         CO2Messages.CO2_INSMOD  : MessageInsmod,
+        CO2Messages.CO2_CD      : MessageCd,
+        CO2Messages.CO2_PWD     : MessagePwd,
     }
 
     @classmethod

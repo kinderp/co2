@@ -8,6 +8,8 @@ from .command_mkdir import CommandMkdir
 from .command_rmdir import CommandRmdir
 from .command_tree import CommandTree
 from .command_insmod import CommandInsmod
+from .command_cd import CommandCd
+from .command_pwd import CommandPwd
 
 
 class CommandsFactory:
@@ -22,6 +24,8 @@ class CommandsFactory:
         "rm"    :     CommandRm,
         "tree"  :   CommandTree,
         "insmod": CommandInsmod,
+        "cd"    :     CommandCd,
+        "pwd"   :    CommandPwd,
     }
 
     @classmethod

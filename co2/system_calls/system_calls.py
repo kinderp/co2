@@ -72,6 +72,8 @@ class ProcessSystemCalls:
     @classmethod
     def execve(cls, abs_filename : str, argv: list, argc : int):
         try:
+            pwd = cls.C_TASK.PWD
+
             tokens = abs_filename.split("/")
             filename = tokens[-1]
             module_abs_filename = '.'.join(tokens[:-1])
@@ -232,12 +234,18 @@ class IOSystemCalls:
 
     @classmethod
     def read(cls, fd : int, buffer : object, count : int = 1):
-        pass
+        ftable_index = ProcessSystemCalls.C_TASK.FDTABLE.get(fd)
+        t_node_number, ft_count, s_dev = cls.file_table.get_entry(ftable_index)
+        t_node = cls.super_table[s_dev].superblock.vector.get_entry(t_node_number)
 
     @classmethod
-    def chdir(cls, pathname : str):
+    def pwd(cls):
+        return ProcessSystemCalls.C_TASK.PWD
+
+    @classmethod
+    def chdir(cls, abs_filename : str):
         try:
-            pathname = ProcessSystemCalls._build_abs_path(pathname)
+            pathname = ProcessSystemCalls._build_abs_path(abs_filename)
             ProcessSystemCalls.C_TASK.PWD = pathname
             return 1
         except Exception as e:

@@ -49,13 +49,16 @@ class CLIParser:
         argsp = cls.argsubparsers.add_parser("umount", help="Unount a device")
         argsp.add_argument("abs_filename", help="Unmount a device", type=str)
 
-        argsp = cls.argsubparsers.add_parser("tree", help="print filesystem tree")
+        argsp = cls.argsubparsers.add_parser("tree", help="Print filesystem tree")
 
         argsp = cls.argsubparsers.add_parser("insmod", help="Load a module driver for a device")
         argsp.add_argument("s_dev", help="", type=str)
         argsp.add_argument("module", help="", type=str)
 
+        argsp = cls.argsubparsers.add_parser("cd", help="Change directory")
+        argsp.add_argument("abs_filename", help="", type=str)
 
+        argsp = cls.argsubparsers.add_parser("pwd", help="Print working directory")
 
     @classmethod
     def parse(cls, argv):

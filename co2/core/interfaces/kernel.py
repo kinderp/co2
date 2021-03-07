@@ -15,6 +15,8 @@ CALL_VEC = {
         CO2Messages.CO2_MKDIR: IOSystemCalls.mkdir,
         CO2Messages.CO2_RMDIR: IOSystemCalls.rmdir,
         CO2Messages.CO2_TREE: IOSystemCalls.tree,
+        CO2Messages.CO2_CD: IOSystemCalls.chdir,
+        CO2Messages.CO2_PWD: IOSystemCalls.pwd,
 }
 
 def _SYSCALL(num, args):

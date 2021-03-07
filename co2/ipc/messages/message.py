@@ -17,6 +17,8 @@ class CO2Messages:
     CO2_MKDIR   = 1002
     CO2_RMDIR   = 1003
     CO2_TREE    = 1004
+    CO2_CD      = 1005
+    CO2_PWD     = 1006
     ####################
     #    PS Messages   #
     ####################
