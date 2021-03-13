@@ -10,7 +10,7 @@ class Driver(ABC):
         pass
 
     @abstractmethod
-    def write(self):
+    def write(self, buffer : object, count : int) -> int:
         pass
 
 

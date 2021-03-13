@@ -1,5 +1,6 @@
 from co2.system_calls import ProcessSystemCalls
 from co2.system_calls import IOSystemCalls
+from co2.system_calls import DriverSystemCalls
 from co2.core.fs.fs import OFlags
 
 import ipdb
@@ -9,6 +10,8 @@ assert IOSystemCalls.open('/file', OFlags.O_RDONLY) < 0 # file does not exist, e
 assert IOSystemCalls.open('/file', OFlags.O_CREAT | OFlags.O_WRONLY) > 0
 assert IOSystemCalls.open('/file', OFlags.O_RDONLY) > 0
 
+DriverSystemCalls.insmod("vpc", "co2.drivers.aws.cdk.vpc.VPCDriver")
+ProcessSystemCalls.execve("/bin/cdk/vpc")
 # /dev is created in boot()
 #assert IOSystemCalls.mkdir('/dev') > 0
 assert IOSystemCalls.mkdir('/etc') > 0

@@ -1,4 +1,5 @@
 import importlib
+from inspect import getmembers, isabstract, isclass
 import json
 from pathlib import Path
 import shelve
@@ -10,13 +11,14 @@ from co2.core.fs.fs import Fs
 from co2.utils.util import Capturing
 
 from co2.core.fs.d_map import DMap
+from co2.core.fs.d_map import DEVICE_MAPPING
 from co2.core.fs.f_table import FTable
 from co2.core.ps import PTable
 from co2.core.ps import PTEntry
 
 
-from co2.types import AWS_TYPES
-
+#from co2.types import AWS_TYPES
+from co2.types.bin.elf import Elf
 
 class ProcessSystemCalls:
     ptable = None
@@ -42,45 +44,64 @@ class ProcessSystemCalls:
         file_table_number = IOSystemCalls.mkdir('/bin')
         fd = cls.C_TASK.FDTABLE.add(file_table_number)
 
+        file_table_number = IOSystemCalls.mkdir('/dev')
+        fd = cls.C_TASK.FDTABLE.add(file_table_number)
+
+        file_table_number = IOSystemCalls.mknod('/dev/vpc', DEVICE_MAPPING['vpc'], 1)
+        fd = cls.C_TASK.FDTABLE.add(file_table_number)
+
         file_table_number = IOSystemCalls.mkdir('/bin/cdk')
         fd = cls.C_TASK.FDTABLE.add(file_table_number)
 
         file_table_number = IOSystemCalls.open('/bin/cdk/vpc')
+        vpc = importlib.import_module('co2.types.bin.cdk.vpc')
         fd = cls.C_TASK.FDTABLE.add(file_table_number)
-        IOSystemCalls.write(fd, AWS_TYPES("AWS::EC2::VPC"))
+        #IOSystemCalls.write(fd, AWS_TYPES("AWS::EC2::VPC"))
+        IOSystemCalls.write(fd, vpc)
 
-        file_table_number = IOSystemCalls.mkdir('/dev')
-        fd = cls.C_TASK.FDTABLE.add(file_table_number)
 
     @classmethod
     def fork(cls):
-        p = cls.ptable.get_entry(cls.pid_current_task)
+        PPID = cls.C_TASK.PID
+        PID = cls.C_TASK.PWD
+        p = cls.ptable.get_entry(PPID)
         if not p:
+            # current task does not exit in ptable
+            # something went wrong. We should raise
+            # something similar to a kernel panic
             return -1
 
         e = PTEntry()
-        index = cls.ptable.add_entry(e)
-        if index:
-            cls.ptable[index].PID = index
-            cls.ptable[index].PPID = p.PID
-            cls.ptable[index].FDS = p.FDS
-            cls.ptable[index].exec_abs_filename = p.exec_abs_filename
-            cls.ptable[index].object = None
-            return index
+        done = cls.ptable.add_entry(PID, e)
+        if done:
+            cls.ptable[PID].PID = PID
+            cls.ptable[PID].PPID = PPID
+            cls.ptable[PID].FDTABLE = p.FDTABLE
+            return 1
         return -1
 
     @classmethod
-    def execve(cls, abs_filename : str, argv: list, argc : int):
+    def execve(cls, abs_filename : str):
         try:
             pwd = cls.C_TASK.PWD
-
-            tokens = abs_filename.split("/")
-            filename = tokens[-1]
-            module_abs_filename = '.'.join(tokens[:-1])
-
+            file_table_number = IOSystemCalls.open(abs_filename, OFlags.O_RDONLY)
+            fd = cls.C_TASK.FDTABLE.add(file_table_number)
+            buffer = []
+            IOSystemCalls.read(fd, buffer, 1)
+            # it should be a module, fingers crossed
+            block = buffer[0]
+            classes = getmembers(block,
+                             lambda m: isclass(m) and not isabstract(m))
+            executable = None
+            for name, _class in classes:
+                if issubclass(_class, Elf):
+                    executable = _class()
+                    break
+            if executable:
+                executable.text()
         except Exception as e:
             return -1
-        return 0
+        return 1
 
     @classmethod
     def mmap(cls, abs_filename):
@@ -229,6 +250,11 @@ class IOSystemCalls:
         ftable_index = ProcessSystemCalls.C_TASK.FDTABLE.get(fd)
         t_node_number, ft_count, s_dev = cls.file_table.get_entry(ftable_index)
         t_node = cls.super_table[s_dev].superblock.vector.get_entry(t_node_number)
+        if t_node.major != -1:
+            # retrieve the correct driver from dmap table
+            # run write func of the selected driver
+            count = DriverSystemCalls.dmap.dmap[t_node.major][1].write(buffer, count)
+            return count
         t_node.block.data = buffer
         return count
 
@@ -237,6 +263,8 @@ class IOSystemCalls:
         ftable_index = ProcessSystemCalls.C_TASK.FDTABLE.get(fd)
         t_node_number, ft_count, s_dev = cls.file_table.get_entry(ftable_index)
         t_node = cls.super_table[s_dev].superblock.vector.get_entry(t_node_number)
+        buffer.append(t_node.block.data)
+        return count
 
     @classmethod
     def pwd(cls):

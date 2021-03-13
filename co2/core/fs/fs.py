@@ -348,6 +348,9 @@ class Fs:
             # UMOUNT_A_NODE : File found          OK
             if handler_type == HandlersTypes.ADD_A_NODE:
                 handler_function_kwargs.update({"s_dev" : s_dev} )
+                handler_function_kwargs.update({"filename"     : None })
+                handler_function_kwargs.update({"t_node"       : None })
+                handler_function_kwargs.update({"t_node_number": None })
                 return self.handlers[handler_type](TraverseCases.CASE_1, **handler_function_kwargs)
             elif handler_type == HandlersTypes.OPEN_A_NODE:
                 handler_function_kwargs.update({"s_dev"         : s_dev        })
