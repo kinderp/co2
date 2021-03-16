@@ -21,8 +21,11 @@ from co2.core.ps import PTEntry
 from co2.types.bin.elf import Elf
 
 class ProcessSystemCalls:
+
     ptable = None
     C_TASK = None
+    F_TASK = set()
+
 
     @classmethod
     def init(cls):
@@ -62,30 +65,37 @@ class ProcessSystemCalls:
 
     @classmethod
     def fork(cls):
-        PPID = cls.C_TASK.PID
+
+        if cls.C_TASK.PWD == '/':
+            # PWD = / can't be forked
+            return -1
+        PPID = '/' + '/'.join(cls.C_TASK.PWD.split("/")[:-1])
         PID = cls.C_TASK.PWD
         p = cls.ptable.get_entry(PPID)
-        if not p:
-            # current task does not exit in ptable
-            # something went wrong. We should raise
-            # something similar to a kernel panic
+        if PPID != "/" and not p:
+            # Parent process has not ben created yet
             return -1
 
         e = PTEntry()
         done = cls.ptable.add_entry(PID, e)
         if done:
-            cls.ptable[PID].PID = PID
-            cls.ptable[PID].PPID = PPID
-            cls.ptable[PID].FDTABLE = p.FDTABLE
+            cls.ptable.table[PID].PID = PID
+            cls.ptable.table[PID].PPID = PPID
+            cls.ptable.table[PID].FDTABLE = p.FDTABLE
+            cls.ptable.table[PID].PWD = p.PWD
+            cls.F_TASK.add(PID)
             return 1
         return -1
 
     @classmethod
     def execve(cls, abs_filename : str):
         try:
-            pwd = cls.C_TASK.PWD
             file_table_number = IOSystemCalls.open(abs_filename, OFlags.O_RDONLY)
-            fd = cls.C_TASK.FDTABLE.add(file_table_number)
+            PID = cls.C_TASK.PWD
+            if not ( PID in cls.F_TASK and PID in cls.ptable.table ):
+                return -1
+            pte = cls.ptable.get_entry(PID)
+            fd = pte.FDTABLE.add(file_table_number)
             buffer = []
             IOSystemCalls.read(fd, buffer, 1)
             # it should be a module, fingers crossed
@@ -99,6 +109,7 @@ class ProcessSystemCalls:
                     break
             if executable:
                 executable.text()
+            cls.F_TASK.remove(PID)
         except Exception as e:
             return -1
         return 1

@@ -11,7 +11,13 @@ assert IOSystemCalls.open('/file', OFlags.O_CREAT | OFlags.O_WRONLY) > 0
 assert IOSystemCalls.open('/file', OFlags.O_RDONLY) > 0
 
 DriverSystemCalls.insmod("vpc", "co2.drivers.aws.cdk.vpc.VPCDriver")
-ProcessSystemCalls.execve("/bin/cdk/vpc")
+# try to fork() / and getting error
+assert ProcessSystemCalls.fork() < 0
+# create a new dir to fork
+assert IOSystemCalls.mkdir('/forkme') > 0
+assert IOSystemCalls.chdir("/forkme") > 0
+assert ProcessSystemCalls.fork() > 0
+assert ProcessSystemCalls.execve("/bin/cdk/vpc") > 0
 # /dev is created in boot()
 #assert IOSystemCalls.mkdir('/dev') > 0
 assert IOSystemCalls.mkdir('/etc') > 0
