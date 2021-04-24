@@ -19,13 +19,15 @@ from co2.core.ps import PTEntry
 
 #from co2.types import AWS_TYPES
 from co2.types.bin.elf import Elf
+from collections import deque
+
 
 class ProcessSystemCalls:
 
     ptable = None
     C_TASK = None
     F_TASK = set()
-
+    STACK  = deque()
 
     @classmethod
     def init(cls):
@@ -84,17 +86,21 @@ class ProcessSystemCalls:
             cls.ptable.table[PID].FDTABLE = p.FDTABLE
             cls.ptable.table[PID].PWD = p.PWD
             cls.F_TASK.add(PID)
+            cls.STACK.append(cls.C_TASK)
             return 1
         return -1
 
     @classmethod
     def execve(cls, abs_filename : str):
         try:
-            file_table_number = IOSystemCalls.open(abs_filename, OFlags.O_RDONLY)
             PID = cls.C_TASK.PWD
             if not ( PID in cls.F_TASK and PID in cls.ptable.table ):
                 return -1
+
             pte = cls.ptable.get_entry(PID)
+            cls.C_TASK = pte
+            file_table_number = IOSystemCalls.open(abs_filename, OFlags.O_RDONLY)
+
             fd = pte.FDTABLE.add(file_table_number)
             buffer = []
             IOSystemCalls.read(fd, buffer, 1)
@@ -110,6 +116,10 @@ class ProcessSystemCalls:
             if executable:
                 executable.text()
             cls.F_TASK.remove(PID)
+            try:
+                cls.C_TASK = cls.STACK.pop()
+            except IndexError as e:
+                return -1
         except Exception as e:
             return -1
         return 1
